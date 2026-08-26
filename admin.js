@@ -753,7 +753,8 @@ function goLogin() {
 // ============================================================
 
 function openSection(
-    sectionName
+    sectionName,
+    addToHistory = true
 ) {
 
     navButtons.forEach(
@@ -778,24 +779,84 @@ function openSection(
             );
         }
     );
-    if (sectionName === "menu") {
-    loadMenu();
-}
 
-if (sectionName === "orders") {
-    loadAdminOrders();
-}
-if (sectionName === "reports") {
-    loadReports();
-}
 
-if (sectionName === "billing") {
-    loadBillingOrders();
-}
+    // ========================================================
+    // SAVE SECTION TO BROWSER / ANDROID HISTORY
+    // ========================================================
 
-if (sectionName === "staff") {
-    loadStaff();
-}
+    if (addToHistory) {
+
+        const currentSection =
+            history.state?.section;
+
+
+        if (
+            currentSection !==
+            sectionName
+        ) {
+
+            history.pushState(
+                {
+                    section:
+                        sectionName
+                },
+                "",
+                `#${sectionName}`
+            );
+        }
+    }
+
+
+    // ========================================================
+    // LOAD SECTION DATA
+    // ========================================================
+
+    if (
+        sectionName ===
+        "menu"
+    ) {
+
+        loadMenu();
+    }
+
+
+    if (
+        sectionName ===
+        "orders"
+    ) {
+
+        loadAdminOrders();
+    }
+
+
+    if (
+        sectionName ===
+        "reports"
+    ) {
+
+        loadReports();
+    }
+
+
+    if (
+        sectionName ===
+        "billing"
+    ) {
+
+        loadBillingOrders();
+    }
+
+
+    if (
+        sectionName ===
+        "staff"
+    ) {
+
+        loadStaff();
+    }
+
+
     if (
         sectionName ===
         "overview"
@@ -814,6 +875,9 @@ if (sectionName === "staff") {
     }
 }
 
+// ============================================================
+// SIDEBAR BUTTON CLICKS
+// ============================================================
 
 navButtons.forEach(
     button => {
@@ -822,8 +886,16 @@ navButtons.forEach(
             "click",
             () => {
 
+                const sectionName =
+                    button.dataset.section;
+
+                if (!sectionName) {
+                    return;
+                }
+
                 openSection(
-                    button.dataset.section
+                    sectionName,
+                    true
                 );
             }
         );
@@ -831,6 +903,78 @@ navButtons.forEach(
 );
 
 
+// ============================================================
+// PHONE BACK BUTTON / ANDROID BACK GESTURE
+// ============================================================
+
+window.addEventListener(
+    "popstate",
+    event => {
+
+        let sectionName =
+            event.state?.section;
+
+
+        if (!sectionName) {
+
+            sectionName =
+                window.location.hash
+                    .replace("#", "") ||
+                "overview";
+        }
+
+
+        openSection(
+            sectionName,
+            false
+        );
+    }
+);
+
+
+// ============================================================
+// INITIAL SECTION HISTORY
+// ============================================================
+
+function setupInitialSectionHistory() {
+
+    const validSections = [
+        "overview",
+        "tables",
+        "orders",
+        "menu",
+        "billing",
+        "staff",
+        "reports"
+    ];
+
+
+    const hash =
+        window.location.hash
+            .replace("#", "");
+
+
+    const initialSection =
+        validSections.includes(hash)
+            ? hash
+            : "overview";
+
+
+    history.replaceState(
+        {
+            section:
+                initialSection
+        },
+        "",
+        `#${initialSection}`
+    );
+
+
+    openSection(
+        initialSection,
+        false
+    );
+}
 // ============================================================
 // LOAD INFO
 // ============================================================
@@ -1843,7 +1987,6 @@ mobileLogoutBtn?.addEventListener(
 // ============================================================
 // INIT
 // ============================================================
-
 async function init() {
 
     if (!sessionToken) {
@@ -1852,6 +1995,12 @@ async function init() {
 
         return;
     }
+
+
+    // Set Overview / current section
+    // as Android/browser history start point
+
+    setupInitialSectionHistory();
 
 
     await refreshDashboard();
