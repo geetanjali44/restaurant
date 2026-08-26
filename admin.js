@@ -6104,3 +6104,78 @@ applyReportFilter?.addEventListener(
         }
     }
 );
+
+const mobileMenuBtn =
+    document.getElementById("mobileMenuBtn");
+
+const sidebar =
+    document.querySelector(".sidebar");
+
+const sidebarOverlay =
+    document.getElementById("sidebarOverlay");
+
+
+function openMobileSidebar() {
+
+    sidebar?.classList.add("open");
+
+    sidebarOverlay?.classList.add("show");
+
+    document.body.style.overflow =
+        "hidden";
+}
+
+
+function closeMobileSidebar() {
+
+    sidebar?.classList.remove("open");
+
+    sidebarOverlay?.classList.remove("show");
+
+    document.body.style.overflow =
+        "";
+}
+
+
+mobileMenuBtn?.addEventListener(
+    "click",
+    () => {
+
+        if (
+            sidebar?.classList.contains("open")
+        ) {
+
+            closeMobileSidebar();
+
+        } else {
+
+            openMobileSidebar();
+        }
+    }
+);
+
+
+sidebarOverlay?.addEventListener(
+    "click",
+    closeMobileSidebar
+);
+
+
+// Menu option click ayyaka sidebar close
+sidebar?.querySelectorAll(
+    "a, button"
+).forEach(item => {
+
+    item.addEventListener(
+        "click",
+        () => {
+
+            if (
+                window.innerWidth <= 768
+            ) {
+
+                closeMobileSidebar();
+            }
+        }
+    );
+});
