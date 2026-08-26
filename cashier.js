@@ -53,6 +53,7 @@ let isLoadingBills = false;
 
 let billFieldsDirty = false;
 
+
 // ============================================================
 // CASHIER NOTIFICATION STATE
 // ============================================================
@@ -215,7 +216,6 @@ function formatStatus(status) {
         return "";
     }
 
-
     return status
         .replaceAll("_", " ")
         .replace(
@@ -231,7 +231,6 @@ function formatDateTime(value) {
     if (!value) {
         return "";
     }
-
 
     return new Date(value)
         .toLocaleString(
@@ -250,20 +249,16 @@ function showToast(message) {
         return;
     }
 
-
     toast.textContent =
         message;
-
 
     toast.classList.add(
         "show"
     );
 
-
     clearTimeout(
         toastTimer
     );
-
 
     toastTimer =
         setTimeout(
@@ -278,6 +273,7 @@ function showToast(message) {
         );
 }
 
+
 // ============================================================
 // CASHIER NATIVE NOTIFICATION
 // ============================================================
@@ -290,7 +286,6 @@ function sendCashierNotification(
 
     try {
 
-        // Android app native notification
         if (
             window.AndroidNotification &&
             typeof window
@@ -315,7 +310,6 @@ function sendCashierNotification(
         }
 
 
-        // Browser fallback
         if (
             "Notification" in window &&
             Notification.permission ===
@@ -429,9 +423,6 @@ function checkCashierBillNotifications(
             : [];
 
 
-    // First load:
-    // already existing bills ki notification vaddu
-
     if (
         !cashierNotificationInitialized
     ) {
@@ -455,8 +446,6 @@ function checkCashierBillNotifications(
         return;
     }
 
-
-    // New bills detect cheyyi
 
     rows.forEach(
         bill => {
@@ -501,17 +490,14 @@ function checkCashierBillNotifications(
                 `Bill #${billNumber} is waiting for payment.`;
 
 
-            // Page toast
             showToast(
                 title
             );
 
 
-            // Phone vibration
             vibrateCashierNotification();
 
 
-            // Android notification
             sendCashierNotification(
                 title,
                 message,
@@ -520,8 +506,6 @@ function checkCashierBillNotifications(
         }
     );
 
-
-    // Completed/removed bills cache clean
 
     const activeIds =
         new Set(
@@ -553,6 +537,8 @@ function checkCashierBillNotifications(
         }
     );
 }
+
+
 // ============================================================
 // LOGIN
 // ============================================================
@@ -566,7 +552,6 @@ function goLogin() {
     localStorage.removeItem(
         "restaurant_user"
     );
-
 
     window.location.replace(
         "index.html"
@@ -659,22 +644,22 @@ async function loadBills() {
         }
 
 
-       currentBills =
-    data || [];
+        currentBills =
+            data || [];
 
 
-// ========================================================
-// NEW BILL REQUEST NOTIFICATION
-// ========================================================
+        // ====================================================
+        // NEW BILL REQUEST NOTIFICATION
+        // ====================================================
 
-checkCashierBillNotifications(
-    currentBills
-);
+        checkCashierBillNotifications(
+            currentBills
+        );
 
 
-renderStats();
+        renderStats();
 
-renderBills();
+        renderBills();
 
 
     } catch (error) {
@@ -879,7 +864,11 @@ async function openBill(orderId) {
 
     selectedBillData =
         data;
-    billFieldsDirty = false;
+
+
+    billFieldsDirty =
+        false;
+
 
     selectedPaymentMethod =
         "cash";
@@ -942,27 +931,23 @@ function renderBill() {
         `${order.table_name} • ${formatStatus(order.status)}`;
 
 
-   // Only fill values from DB when bill is first opened
-// or after a successful save.
-// While cashier is typing, don't overwrite them.
+    if (!billFieldsDirty) {
 
-if (!billFieldsDirty) {
+        discountInput.value =
+            Number(
+                order.discount_amount || 0
+            );
 
-    discountInput.value =
-        Number(
-            order.discount_amount || 0
-        );
+        taxInput.value =
+            Number(
+                order.tax_amount || 0
+            );
 
-    taxInput.value =
-        Number(
-            order.tax_amount || 0
-        );
-
-    serviceInput.value =
-        Number(
-            order.service_charge || 0
-        );
-}
+        serviceInput.value =
+            Number(
+                order.service_charge || 0
+            );
+    }
 
 
     if (!items.length) {
@@ -1177,14 +1162,12 @@ function renderBillSummary() {
         "input",
         () => {
 
-            // User manually edited bill.
-            // Live refresh must not overwrite these values.
-            billFieldsDirty = true;
+            billFieldsDirty =
+                true;
 
             renderBillSummary();
         }
     );
-
 });
 
 
@@ -1308,29 +1291,25 @@ async function updateBill() {
 
 
         showToast(
-    data?.message ||
-    "Bill updated"
-);
+            data?.message ||
+            "Bill updated"
+        );
 
 
-// Current bill ID ni first save chestunnam
-const currentBillId =
-    selectedBillId;
+        const currentBillId =
+            selectedBillId;
 
 
-// User changes save ayyayi
-billFieldsDirty =
-    false;
+        billFieldsDirty =
+            false;
 
 
-// Billing cards refresh
-await loadBills();
+        await loadBills();
 
 
-// Same bill ni fresh data tho reopen
-await openBill(
-    currentBillId
-);
+        await openBill(
+            currentBillId
+        );
 
 
     } catch (error) {
@@ -1357,8 +1336,6 @@ await openBill(
             oldText;
     }
 }
-
-
 // ============================================================
 // COMPLETE PAYMENT
 // ============================================================
@@ -1415,9 +1392,9 @@ async function completePayment() {
 
     try {
 
-        // --------------------------------------------
+        // ====================================================
         // SAVE CURRENT BILL VALUES FIRST
-        // --------------------------------------------
+        // ====================================================
 
         const updateResponse =
             await db.rpc(
@@ -1450,15 +1427,17 @@ async function completePayment() {
             );
 
 
-        if (updateResponse.error) {
+        if (
+            updateResponse.error
+        ) {
 
             throw updateResponse.error;
         }
 
 
-        // --------------------------------------------
-        // SAVE FINAL RECEIPT VALUES
-        // --------------------------------------------
+        // ====================================================
+        // SAVE RECEIPT DATA BEFORE PAYMENT
+        // ====================================================
 
         const receiptData =
             selectedBillData;
@@ -1489,9 +1468,9 @@ async function completePayment() {
         };
 
 
-        // --------------------------------------------
+        // ====================================================
         // COMPLETE PAYMENT
-        // --------------------------------------------
+        // ====================================================
 
         const {
             data,
@@ -1528,17 +1507,28 @@ async function completePayment() {
         );
 
 
+        // ====================================================
+        // CLOSE BILL MODAL
+        // ====================================================
+
         closeBill();
 
 
-        // Browser print for now.
-        // Later Android Bluetooth printer bridge goes here.
+        // ====================================================
+        // PRINT RECEIPT
+        // Android app -> PSF588 physical printer
+        // Browser -> existing print fallback
+        // ====================================================
 
         printReceipt(
             receiptData,
             receiptValues
         );
 
+
+        // ====================================================
+        // REFRESH BILLING
+        // ====================================================
 
         await loadBills();
 
@@ -1568,12 +1558,13 @@ async function completePayment() {
     }
 }
 
+
 // ============================================================
 // ANDROID BLUETOOTH PRINTER
 // ============================================================
 
-const SAVED_PRINTER_KEY =
-    "restaurant_bluetooth_printer";
+const BLUETOOTH_PRINTER_NAME =
+    "PSF588";
 
 
 // ============================================================
@@ -1584,170 +1575,11 @@ function hasAndroidPrinter() {
 
     return !!(
         window.AndroidPrinter &&
-        typeof window.AndroidPrinter
+        typeof window
+            .AndroidPrinter
             .printReceipt ===
             "function"
     );
-}
-
-
-// ============================================================
-// GET PAIRED PRINTERS
-// ============================================================
-
-function getPairedPrinters() {
-
-    if (!hasAndroidPrinter()) {
-        return [];
-    }
-
-
-    try {
-
-        const result =
-            window.AndroidPrinter
-                .getPairedPrinters();
-
-
-        if (!result) {
-            return [];
-        }
-
-
-        return String(result)
-            .split("|")
-            .map(
-                name =>
-                    name.trim()
-            )
-            .filter(Boolean);
-
-
-    } catch (error) {
-
-        console.error(
-            "Get printers error:",
-            error
-        );
-
-
-        return [];
-    }
-}
-
-
-// ============================================================
-// GET / SELECT PRINTER
-// ============================================================
-
-function getSelectedPrinter() {
-
-    const printers =
-        getPairedPrinters();
-
-
-    if (!printers.length) {
-
-        showToast(
-            "No paired Bluetooth printer found"
-        );
-
-
-        return null;
-    }
-
-
-    const savedPrinter =
-        localStorage.getItem(
-            SAVED_PRINTER_KEY
-        );
-
-
-    if (
-        savedPrinter &&
-        printers.includes(
-            savedPrinter
-        )
-    ) {
-
-        return savedPrinter;
-    }
-
-
-    // First paired printer use chestam.
-    // Later UI lo printer selector add cheyyachu.
-
-    const printerName =
-        printers[0];
-
-
-    localStorage.setItem(
-        SAVED_PRINTER_KEY,
-        printerName
-    );
-
-
-    return printerName;
-}
-
-
-// ============================================================
-// CONNECT PRINTER
-// ============================================================
-
-function connectCashierPrinter() {
-
-    if (!hasAndroidPrinter()) {
-
-        showToast(
-            "Bluetooth printing works only in Android app"
-        );
-
-
-        return null;
-    }
-
-
-    const printerName =
-        getSelectedPrinter();
-
-
-    if (!printerName) {
-        return null;
-    }
-
-
-    try {
-
-        window.AndroidPrinter
-            .connectPrinter(
-                printerName
-            );
-
-
-        showToast(
-            `Connecting ${printerName}...`
-        );
-
-
-        return printerName;
-
-
-    } catch (error) {
-
-        console.error(
-            "Printer connection error:",
-            error
-        );
-
-
-        showToast(
-            "Unable to connect printer"
-        );
-
-
-        return null;
-    }
 }
 
 
@@ -1817,6 +1649,7 @@ function buildThermalReceipt(
         );
 
 
+    // 58mm printer width
     const line =
         "--------------------------------";
 
@@ -1825,12 +1658,20 @@ function buildThermalReceipt(
         "";
 
 
+    // ========================================================
+    // RESTAURANT NAME
+    // ========================================================
+
     receipt +=
         `${
             restaurant.name ||
             "RESTAURANT"
         }\n`;
 
+
+    // ========================================================
+    // ADDRESS
+    // ========================================================
 
     if (
         restaurant.address
@@ -1841,6 +1682,10 @@ function buildThermalReceipt(
     }
 
 
+    // ========================================================
+    // PHONE
+    // ========================================================
+
     if (
         restaurant.phone
     ) {
@@ -1849,6 +1694,10 @@ function buildThermalReceipt(
             `Phone: ${restaurant.phone}\n`;
     }
 
+
+    // ========================================================
+    // GST
+    // ========================================================
 
     if (
         restaurant.gst_number
@@ -1862,6 +1711,10 @@ function buildThermalReceipt(
     receipt +=
         `${line}\n`;
 
+
+    // ========================================================
+    // BILL INFO
+    // ========================================================
 
     receipt +=
         `Bill #${order.bill_number}\n`;
@@ -1900,54 +1753,63 @@ function buildThermalReceipt(
         `${line}\n`;
 
 
+    // ========================================================
+    // ITEMS HEADER
+    // ========================================================
+
     receipt +=
-        `ITEM                QTY  AMT\n`;
+        `ITEM\n`;
 
 
     receipt +=
         `${line}\n`;
 
 
+    // ========================================================
+    // ITEMS
+    // ========================================================
+
     items.forEach(
         item => {
 
-            const name =
+            const itemName =
                 String(
                     item.item_name ||
                     "Item"
                 );
 
 
-            const qty =
+            const quantity =
                 Number(
                     item.quantity ||
                     0
                 );
 
 
-            const amount =
+            const unitPrice =
+                Number(
+                    item.unit_price ||
+                    0
+                );
+
+
+            const lineTotal =
                 Number(
                     item.line_total ||
                     0
                 );
 
 
-            // Item name
             receipt +=
-                `${name}\n`;
-
-
-            receipt +=
-                `${qty} x ₹${
-                    Number(
-                        item.unit_price ||
-                        0
-                    ).toFixed(2)
-                }`;
+                `${itemName}\n`;
 
 
             receipt +=
-                `     ₹${amount.toFixed(2)}\n`;
+                `${quantity} x Rs.${unitPrice.toFixed(2)}`;
+
+
+            receipt +=
+                `   Rs.${lineTotal.toFixed(2)}\n`;
         }
     );
 
@@ -1956,28 +1818,50 @@ function buildThermalReceipt(
         `${line}\n`;
 
 
+    // ========================================================
+    // SUBTOTAL
+    // ========================================================
+
     receipt +=
-        `Subtotal: ₹${subtotal.toFixed(2)}\n`;
+        `Subtotal : Rs.${subtotal.toFixed(2)}\n`;
 
 
-    if (tax > 0) {
+    // ========================================================
+    // TAX
+    // ========================================================
+
+    if (
+        tax > 0
+    ) {
 
         receipt +=
-            `Tax:      ₹${tax.toFixed(2)}\n`;
+            `Tax      : Rs.${tax.toFixed(2)}\n`;
     }
 
 
-    if (service > 0) {
+    // ========================================================
+    // SERVICE
+    // ========================================================
+
+    if (
+        service > 0
+    ) {
 
         receipt +=
-            `Service:  ₹${service.toFixed(2)}\n`;
+            `Service  : Rs.${service.toFixed(2)}\n`;
     }
 
 
-    if (discount > 0) {
+    // ========================================================
+    // DISCOUNT
+    // ========================================================
+
+    if (
+        discount > 0
+    ) {
 
         receipt +=
-            `Discount: -₹${discount.toFixed(2)}\n`;
+            `Discount : -Rs.${discount.toFixed(2)}\n`;
     }
 
 
@@ -1985,13 +1869,21 @@ function buildThermalReceipt(
         `${line}\n`;
 
 
+    // ========================================================
+    // TOTAL
+    // ========================================================
+
     receipt +=
-        `TOTAL: ₹${total.toFixed(2)}\n`;
+        `TOTAL    : Rs.${total.toFixed(2)}\n`;
 
 
     receipt +=
         `${line}\n`;
 
+
+    // ========================================================
+    // PAYMENT METHOD
+    // ========================================================
 
     receipt +=
         `Payment: ${
@@ -2006,6 +1898,10 @@ function buildThermalReceipt(
         `${line}\n\n`;
 
 
+    // ========================================================
+    // FOOTER
+    // ========================================================
+
     receipt +=
         `${
             restaurant.receipt_footer ||
@@ -2014,7 +1910,7 @@ function buildThermalReceipt(
 
 
     receipt +=
-        "\n\n";
+        "\n\n\n";
 
 
     return receipt;
@@ -2022,7 +1918,7 @@ function buildThermalReceipt(
 
 
 // ============================================================
-// PRINT USING ANDROID THERMAL PRINTER
+// PRINT DIRECT TO PSF588
 // ============================================================
 
 function printAndroidReceipt(
@@ -2030,17 +1926,11 @@ function printAndroidReceipt(
     values
 ) {
 
-    if (!hasAndroidPrinter()) {
+    if (
+        !hasAndroidPrinter()
+    ) {
+
         return false;
-    }
-
-
-    const printerName =
-        getSelectedPrinter();
-
-
-    if (!printerName) {
-        return true;
     }
 
 
@@ -2051,12 +1941,13 @@ function printAndroidReceipt(
         );
 
 
-    if (!receiptText) {
+    if (
+        !receiptText
+    ) {
 
         showToast(
             "Unable to prepare receipt"
         );
-
 
         return true;
     }
@@ -2064,52 +1955,25 @@ function printAndroidReceipt(
 
     try {
 
-        // Connect first
+        // ====================================================
+        // IMPORTANT
+        // MainActivity.kt lo function signature:
+        //
+        // printReceipt(
+        //     printerName: String,
+        //     receiptText: String
+        // )
+        // ====================================================
 
         window.AndroidPrinter
-            .connectPrinter(
-                printerName
+            .printReceipt(
+                BLUETOOTH_PRINTER_NAME,
+                receiptText
             );
 
 
         showToast(
-            `Connecting ${printerName}...`
-        );
-
-
-        // Bluetooth connection ki konchem time istunnam
-
-        setTimeout(
-            () => {
-
-                try {
-
-                    window.AndroidPrinter
-                        .printReceipt(
-                            receiptText
-                        );
-
-
-                    showToast(
-                        "Bill sent to printer"
-                    );
-
-
-                } catch (error) {
-
-                    console.error(
-                        "Print error:",
-                        error
-                    );
-
-
-                    showToast(
-                        "Unable to print bill"
-                    );
-                }
-
-            },
-            1500
+            "Sending bill to PSF588..."
         );
 
 
@@ -2119,22 +1983,23 @@ function printAndroidReceipt(
     } catch (error) {
 
         console.error(
-            "Bluetooth printer error:",
+            "PSF588 print error:",
             error
         );
 
 
         showToast(
-            "Printer connection failed"
+            "Unable to send bill to printer"
         );
 
 
         return true;
     }
 }
+
+
 // ============================================================
 // PRINT RECEIPT
-// TEMP LOGO + TEMP QR
 // ============================================================
 
 function printReceipt(
@@ -2159,19 +2024,28 @@ function printReceipt(
     if (!order) {
         return;
     }
+
+
     // ========================================================
-// ANDROID BLUETOOTH THERMAL PRINTER
-// ========================================================
+    // ANDROID APP
+    // Direct physical PSF588 Bluetooth print.
+    // NO phone print preview.
+    // ========================================================
 
-if (
-    printAndroidReceipt(
-        billData,
-        values
-    )
-) {
+    if (
+        printAndroidReceipt(
+            billData,
+            values
+        )
+    ) {
 
-    return;
-}
+        return;
+    }
+
+
+    // ========================================================
+    // NORMAL BROWSER FALLBACK
+    // ========================================================
 
     const subtotal =
         Number(
@@ -2213,7 +2087,6 @@ if (
 
     // ========================================================
     // TEMP LOGO
-    // Later replace
     // ========================================================
 
     const LOGO_URL =
@@ -2222,7 +2095,6 @@ if (
 
     // ========================================================
     // TEMP QR
-    // Later replace with your real UPI QR/data
     // ========================================================
 
     const qrText =
@@ -2250,20 +2122,24 @@ if (
                             </strong>
 
                             <div class="small">
+
                                 ${item.quantity}
                                 ×
                                 ₹${Number(
                                     item.unit_price
                                 ).toFixed(2)}
+
                             </div>
 
                         </td>
 
 
                         <td class="right">
+
                             ₹${Number(
                                 item.line_total
                             ).toFixed(2)}
+
                         </td>
 
                     </tr>
@@ -2280,7 +2156,9 @@ if (
         );
 
 
-    if (!receiptWindow) {
+    if (
+        !receiptWindow
+    ) {
 
         showToast(
             "Please allow popups for printing"
@@ -2328,7 +2206,6 @@ if (
                     color: #000;
 
                     background: #fff;
-
                 }
 
 
@@ -2419,6 +2296,7 @@ if (
                     padding-top: 7px;
 
                     font-size: 15px;
+
                     font-weight: bold;
                 }
 
@@ -2468,7 +2346,9 @@ if (
 
                     html,
                     body {
+
                         width: 72mm;
+
                         margin: 0 auto;
                     }
                 }
@@ -2505,9 +2385,11 @@ if (
                 restaurant.address
                     ? `
                         <div class="center small">
+
                             ${escapeHtml(
                                 restaurant.address
                             )}
+
                         </div>
                     `
                     : ""
@@ -2518,9 +2400,11 @@ if (
                 restaurant.phone
                     ? `
                         <div class="center small">
+
                             ${escapeHtml(
                                 restaurant.phone
                             )}
+
                         </div>
                     `
                     : ""
@@ -2531,10 +2415,12 @@ if (
                 restaurant.gst_number
                     ? `
                         <div class="center small">
+
                             GST:
                             ${escapeHtml(
                                 restaurant.gst_number
                             )}
+
                         </div>
                     `
                     : ""
@@ -2563,22 +2449,29 @@ if (
             <div class="info">
 
                 <span>
+
                     ${new Date()
                         .toLocaleDateString(
                             "en-IN"
                         )}
+
                 </span>
 
 
                 <span>
+
                     ${new Date()
                         .toLocaleTimeString(
                             "en-IN",
                             {
-                                hour: "2-digit",
-                                minute: "2-digit"
+                                hour:
+                                    "2-digit",
+
+                                minute:
+                                    "2-digit"
                             }
                         )}
+
                 </span>
 
             </div>
@@ -2596,6 +2489,7 @@ if (
                         <th>
                             Item
                         </th>
+
 
                         <th class="right">
                             Amount
@@ -2690,13 +2584,16 @@ if (
             <div class="payment">
 
                 Payment:
+
                 <strong>
+
                     ${escapeHtml(
                         String(
                             values.paymentMethod ||
                             "cash"
                         ).toUpperCase()
                     )}
+
                 </strong>
 
             </div>
@@ -2718,7 +2615,9 @@ if (
 
 
                 <div class="small">
+
                     Scan for payment / bill details
+
                 </div>
 
             </div>
@@ -2764,8 +2663,6 @@ if (
 
     receiptWindow.document.close();
 }
-
-
 // ============================================================
 // CLOSE BILL
 // ============================================================
@@ -2787,14 +2684,26 @@ function closeBill() {
 
     selectedPaymentMethod =
         "cash";
+
+
+    billFieldsDirty =
+        false;
 }
 
+
+// ============================================================
+// CLOSE BILL BUTTON
+// ============================================================
 
 closeBillModalBtn?.addEventListener(
     "click",
     closeBill
 );
 
+
+// ============================================================
+// CLICK OUTSIDE MODAL TO CLOSE
+// ============================================================
 
 billModal?.addEventListener(
     "click",
@@ -2817,7 +2726,9 @@ billModal?.addEventListener(
 
 function startLiveSync() {
 
-    if (liveTimer) {
+    if (
+        liveTimer
+    ) {
 
         clearInterval(
             liveTimer
@@ -2829,20 +2740,30 @@ function startLiveSync() {
         setInterval(
             async () => {
 
+                // App/page visible unte matrame refresh
                 if (
                     document.visibilityState !==
                     "visible"
                 ) {
+
                     return;
                 }
 
 
+                // ====================================================
+                // REFRESH BILLING CARDS
+                // ====================================================
+
                 await loadBills();
 
 
-                if (selectedBillId) {
+                // ====================================================
+                // KEEP OPENED BILL LIVE
+                // ====================================================
 
-                    // Keep opened bill live as well.
+                if (
+                    selectedBillId
+                ) {
 
                     const openedId =
                         selectedBillId;
@@ -2864,13 +2785,27 @@ function startLiveSync() {
                         );
 
 
-                    if (!error && data) {
+                    if (
+                        !error &&
+                        data
+                    ) {
 
                         selectedBillData =
                             data;
 
 
-                        renderBill();
+                        /*
+                         * Important:
+                         * Discount / tax / service user edit chestunte
+                         * 2-second refresh values ni reset cheyyakudadhu.
+                         */
+
+                        if (
+                            !billFieldsDirty
+                        ) {
+
+                            renderBill();
+                        }
                     }
                 }
 
@@ -2886,14 +2821,63 @@ function startLiveSync() {
 
 document.addEventListener(
     "visibilitychange",
-    () => {
+    async () => {
 
         if (
             document.visibilityState ===
             "visible"
         ) {
 
-            loadBills();
+            await loadBills();
+
+
+            if (
+                selectedBillId &&
+                !billFieldsDirty
+            ) {
+
+                const openedId =
+                    selectedBillId;
+
+
+                try {
+
+                    const {
+                        data,
+                        error
+                    } =
+                        await db.rpc(
+                            "admin_get_bill_details",
+                            {
+                                p_session_token:
+                                    sessionToken,
+
+                                p_order_id:
+                                    openedId
+                            }
+                        );
+
+
+                    if (
+                        !error &&
+                        data
+                    ) {
+
+                        selectedBillData =
+                            data;
+
+
+                        renderBill();
+                    }
+
+                } catch (error) {
+
+                    console.error(
+                        "Foreground bill refresh error:",
+                        error
+                    );
+                }
+            }
         }
     }
 );
@@ -2909,15 +2893,31 @@ logoutBtn?.addEventListener(
 
         try {
 
-            if (liveTimer) {
+            // ====================================================
+            // STOP LIVE TIMER
+            // ====================================================
+
+            if (
+                liveTimer
+            ) {
 
                 clearInterval(
                     liveTimer
                 );
+
+
+                liveTimer =
+                    null;
             }
 
 
-            if (sessionToken) {
+            // ====================================================
+            // SERVER LOGOUT
+            // ====================================================
+
+            if (
+                sessionToken
+            ) {
 
                 await db.rpc(
                     "staff_logout",
@@ -2951,7 +2951,9 @@ logoutBtn?.addEventListener(
 
 async function init() {
 
-    if (!sessionToken) {
+    if (
+        !sessionToken
+    ) {
 
         goLogin();
 
@@ -2961,19 +2963,43 @@ async function init() {
 
     try {
 
+        // ====================================================
+        // CASHIER INFO
+        // ====================================================
+
         await loadCashierInfo();
 
-await requestCashierNotificationPermission();
 
-await loadBills();
+        // ====================================================
+        // NOTIFICATION PERMISSION
+        // ====================================================
+
+        await requestCashierNotificationPermission();
 
 
-        if (loader) {
+        // ====================================================
+        // INITIAL BILL LOAD
+        // ====================================================
+
+        await loadBills();
+
+
+        // ====================================================
+        // HIDE LOADER
+        // ====================================================
+
+        if (
+            loader
+        ) {
 
             loader.style.display =
                 "none";
         }
 
+
+        // ====================================================
+        // START LIVE SYNC
+        // ====================================================
 
         startLiveSync();
 
@@ -2986,7 +3012,9 @@ await loadBills();
         );
 
 
-        if (loader) {
+        if (
+            loader
+        ) {
 
             loader.style.display =
                 "none";
