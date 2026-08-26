@@ -28,7 +28,7 @@
 
     const BACK_DISTANCE = 85;
 
-    const SHIMMER_TIME = 2000;
+    const SHIMMER_TIME = 1000;
 
 
     // ========================================================
