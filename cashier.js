@@ -1,6 +1,6 @@
 // ============================================================
 // RESTAURANT POS
-// CASHIER BILLING DASHBOARD
+// CASHIER DASHBOARD
 // CUSTOM SESSION
 // ============================================================
 
@@ -37,13 +37,15 @@ const sessionToken =
     );
 
 
+// ============================================================
+// STATE
+// ============================================================
+
 let currentBills = [];
 
 let selectedBillId = null;
 
-let selectedBillData = null;
-
-let selectedPaymentMethod = "cash";
+let selectedBill = null;
 
 let liveTimer = null;
 
@@ -55,6 +57,21 @@ let billFieldsDirty = false;
 
 
 // ============================================================
+// CASHIER NOTIFICATION STATE
+// ============================================================
+
+// First login/open app lo already unna bills ki
+// notification raakunda cache initialize chestam.
+
+let cashierNotificationInitialized =
+    false;
+
+
+const cashierKnownBillIds =
+    new Set();
+
+
+// ============================================================
 // ELEMENTS
 // ============================================================
 
@@ -63,105 +80,36 @@ const loader =
         "loader"
     );
 
+
 const restaurantName =
     document.getElementById(
         "restaurantName"
     );
 
-const cashierName =
+
+const cashierStaffName =
     document.getElementById(
-        "cashierName"
+        "cashierStaffName"
     );
+
 
 const logoutBtn =
     document.getElementById(
         "logoutBtn"
     );
 
-const pendingBillsCount =
+
+const billsList =
     document.getElementById(
-        "pendingBillsCount"
+        "billsList"
     );
 
-const pendingAmount =
+
+const billDetails =
     document.getElementById(
-        "pendingAmount"
+        "billDetails"
     );
 
-const billingNowCount =
-    document.getElementById(
-        "billingNowCount"
-    );
-
-const billingGrid =
-    document.getElementById(
-        "billingGrid"
-    );
-
-const billModal =
-    document.getElementById(
-        "billModal"
-    );
-
-const billTitle =
-    document.getElementById(
-        "billTitle"
-    );
-
-const billTableName =
-    document.getElementById(
-        "billTableName"
-    );
-
-const closeBillModalBtn =
-    document.getElementById(
-        "closeBillModal"
-    );
-
-const billItems =
-    document.getElementById(
-        "billItems"
-    );
-
-const discountInput =
-    document.getElementById(
-        "discountInput"
-    );
-
-const taxInput =
-    document.getElementById(
-        "taxInput"
-    );
-
-const serviceInput =
-    document.getElementById(
-        "serviceInput"
-    );
-
-const billSummary =
-    document.getElementById(
-        "billSummary"
-    );
-
-const paymentMethodButtons =
-    document.querySelectorAll(
-        ".payment-method"
-    );
-
-const referenceInput =
-    document.getElementById(
-        "referenceInput"
-    );
-
-const updateBillBtn =
-    document.getElementById(
-        "updateBillBtn"
-    );
-
-const completePaymentBtn =
-    document.getElementById(
-        "completePaymentBtn"
-    );
 
 const toast =
     document.getElementById(
@@ -173,60 +121,67 @@ const toast =
 // HELPERS
 // ============================================================
 
-function money(value) {
-
-    return new Intl.NumberFormat(
-        "en-IN",
-        {
-            style: "currency",
-            currency: "INR",
-            maximumFractionDigits: 2
-        }
-    ).format(
-        Number(value || 0)
-    );
-}
-
-
 function escapeHtml(value) {
 
-    return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
-
-
-function formatStatus(status) {
-
-    if (!status) {
-        return "";
-    }
-
-
-    return status
-        .replaceAll("_", " ")
-        .replace(
-            /\b\w/g,
-            char =>
-                char.toUpperCase()
+    return String(
+        value ?? ""
+    )
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
         );
 }
 
 
-function formatDateTime(value) {
+function money(value) {
+
+    return Number(
+        value || 0
+    ).toLocaleString(
+        "en-IN",
+        {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }
+    );
+}
+
+
+function formatTime(value) {
 
     if (!value) {
         return "";
     }
 
 
-    return new Date(value)
-        .toLocaleString(
-            "en-IN"
-        );
+    return new Date(
+        value
+    ).toLocaleTimeString(
+        "en-IN",
+        {
+            hour:
+                "2-digit",
+
+            minute:
+                "2-digit"
+        }
+    );
 }
 
 
@@ -270,6 +225,310 @@ function showToast(message) {
 
 
 // ============================================================
+// NATIVE / BROWSER NOTIFICATION
+// ============================================================
+
+function sendStaffNotification(
+    title,
+    body,
+    tag = ""
+) {
+
+    try {
+
+        // ====================================================
+        // ANDROID APP
+        // ====================================================
+
+        if (
+            window.AndroidNotification &&
+            typeof window
+                .AndroidNotification
+                .showNotification ===
+                "function"
+        ) {
+
+            window.AndroidNotification
+                .showNotification(
+                    String(
+                        title ||
+                        "Restaurant"
+                    ),
+                    String(
+                        body ||
+                        ""
+                    )
+                );
+
+
+            return;
+        }
+
+
+        // ====================================================
+        // BROWSER FALLBACK
+        // ====================================================
+
+        if (
+            "Notification" in window &&
+            Notification.permission ===
+                "granted"
+        ) {
+
+            new Notification(
+                String(
+                    title ||
+                    "Restaurant"
+                ),
+                {
+                    body:
+                        String(
+                            body ||
+                            ""
+                        ),
+
+                    tag:
+                        String(
+                            tag ||
+                            title ||
+                            "restaurant"
+                        )
+                }
+            );
+        }
+
+
+    } catch (error) {
+
+        console.log(
+            "Notification unavailable:",
+            error
+        );
+    }
+}
+
+
+// ============================================================
+// BROWSER NOTIFICATION PERMISSION
+// ============================================================
+
+async function requestStaffNotificationPermission() {
+
+    try {
+
+        if (
+            "Notification" in window &&
+            Notification.permission ===
+                "default"
+        ) {
+
+            await Notification
+                .requestPermission();
+        }
+
+
+    } catch (error) {
+
+        console.log(
+            "Notification permission unavailable:",
+            error
+        );
+    }
+}
+
+
+// ============================================================
+// VIBRATION
+// ============================================================
+
+function vibrateStaffNotification() {
+
+    try {
+
+        if (
+            "vibrate" in navigator
+        ) {
+
+            navigator.vibrate([
+                250,
+                120,
+                250,
+                120,
+                400
+            ]);
+        }
+
+    } catch (_) {
+
+        // Ignore unsupported vibration
+    }
+}
+
+
+// ============================================================
+// NOTIFY CASHIER
+// ============================================================
+
+function notifyCashier(
+    title,
+    body,
+    tag
+) {
+
+    showToast(
+        title
+    );
+
+
+    vibrateStaffNotification();
+
+
+    sendStaffNotification(
+        title,
+        body,
+        tag
+    );
+}
+
+
+// ============================================================
+// DETECT NEW BILL REQUEST
+// ============================================================
+
+function checkCashierBillNotifications(
+    bills
+) {
+
+    const rows =
+        Array.isArray(
+            bills
+        )
+            ? bills
+            : [];
+
+
+    // ========================================================
+    // FIRST LOAD
+    // ========================================================
+
+    if (
+        !cashierNotificationInitialized
+    ) {
+
+        rows.forEach(
+            bill => {
+
+                cashierKnownBillIds.add(
+                    String(
+                        bill.id
+                    )
+                );
+            }
+        );
+
+
+        cashierNotificationInitialized =
+            true;
+
+
+        return;
+    }
+
+
+    // ========================================================
+    // NEW BILL
+    // ========================================================
+
+    rows.forEach(
+        bill => {
+
+            const billId =
+                String(
+                    bill.id
+                );
+
+
+            if (
+                cashierKnownBillIds
+                    .has(
+                        billId
+                    )
+            ) {
+
+                return;
+            }
+
+
+            cashierKnownBillIds.add(
+                billId
+            );
+
+
+            const tableName =
+                bill.table_name ||
+                "Table";
+
+
+            const billNumber =
+                bill.bill_number ||
+                "";
+
+
+            const title =
+                `Bill Requested • ${tableName}`;
+
+
+            const body =
+                `Bill #${billNumber} is waiting for payment.`;
+
+
+            notifyCashier(
+                title,
+                body,
+                `cashier-bill-${billId}`
+            );
+        }
+    );
+
+
+    // ========================================================
+    // CLEAN OLD CACHE
+    // ========================================================
+
+    const activeIds =
+        new Set(
+            rows.map(
+                bill =>
+                    String(
+                        bill.id
+                    )
+            )
+        );
+
+
+    [
+        ...cashierKnownBillIds
+
+    ].forEach(
+        billId => {
+
+            if (
+                !activeIds.has(
+                    billId
+                )
+            ) {
+
+                cashierKnownBillIds
+                    .delete(
+                        billId
+                    );
+            }
+        }
+    );
+}
+
+
+// ============================================================
 // LOGIN
 // ============================================================
 
@@ -278,6 +537,7 @@ function goLogin() {
     localStorage.removeItem(
         "restaurant_session_token"
     );
+
 
     localStorage.removeItem(
         "restaurant_user"
@@ -291,7 +551,7 @@ function goLogin() {
 
 
 // ============================================================
-// CASHIER INFO
+// LOAD CASHIER INFO
 // ============================================================
 
 async function loadCashierInfo() {
@@ -319,18 +579,29 @@ async function loadCashierInfo() {
 
         goLogin();
 
+
         return;
     }
 
 
-    restaurantName.textContent =
-        data?.restaurant?.name ||
-        "Restaurant";
+    if (
+        restaurantName
+    ) {
+
+        restaurantName.textContent =
+            data?.restaurant?.name ||
+            "Restaurant";
+    }
 
 
-    cashierName.textContent =
-        data?.staff?.full_name ||
-        "Cashier";
+    if (
+        cashierStaffName
+    ) {
+
+        cashierStaffName.textContent =
+            data?.staff?.full_name ||
+            "Cashier";
+    }
 }
 
 
@@ -340,7 +611,10 @@ async function loadCashierInfo() {
 
 async function loadBills() {
 
-    if (isLoadingBills) {
+    if (
+        isLoadingBills
+    ) {
+
         return;
     }
 
@@ -356,7 +630,7 @@ async function loadBills() {
             error
         } =
             await db.rpc(
-                "admin_get_billing_orders",
+                "cashier_get_bills",
                 {
                     p_session_token:
                         sessionToken
@@ -366,12 +640,7 @@ async function loadBills() {
 
         if (error) {
 
-            console.error(
-                "Billing orders error:",
-                error
-            );
-
-            return;
+            throw error;
         }
 
 
@@ -379,15 +648,63 @@ async function loadBills() {
             data || [];
 
 
-        renderStats();
+        // ====================================================
+        // CHECK NEW BILL REQUEST
+        // ====================================================
+
+        checkCashierBillNotifications(
+            currentBills
+        );
+
 
         renderBills();
+
+
+        // ====================================================
+        // KEEP SELECTED BILL OPEN
+        // ====================================================
+
+        if (
+            selectedBillId
+        ) {
+
+            const stillExists =
+                currentBills.some(
+                    bill =>
+                        String(
+                            bill.id
+                        ) ===
+                        String(
+                            selectedBillId
+                        )
+                );
+
+
+            if (
+                !stillExists
+            ) {
+
+                selectedBillId =
+                    null;
+
+
+                selectedBill =
+                    null;
+
+
+                billFieldsDirty =
+                    false;
+
+
+                renderEmptyBill();
+            }
+        }
 
 
     } catch (error) {
 
         console.error(
-            "Billing refresh error:",
+            "Cashier bills error:",
             error
         );
 
@@ -401,131 +718,142 @@ async function loadBills() {
 
 
 // ============================================================
-// STATS
-// ============================================================
-
-function renderStats() {
-
-    const pending =
-        currentBills.length;
-
-
-    const amount =
-        currentBills.reduce(
-            (total, bill) =>
-                total +
-                Number(
-                    bill.grand_total || 0
-                ),
-            0
-        );
-
-
-    const billingNow =
-        currentBills.filter(
-            bill =>
-                bill.status ===
-                "billing"
-        ).length;
-
-
-    pendingBillsCount.textContent =
-        pending;
-
-
-    pendingAmount.textContent =
-        money(amount);
-
-
-    billingNowCount.textContent =
-        billingNow;
-}
-
-
-// ============================================================
-// RENDER BILL CARDS
+// RENDER BILLS
 // ============================================================
 
 function renderBills() {
 
-    if (!currentBills.length) {
-
-        billingGrid.innerHTML = `
-            <div class="empty">
-                No bill requests.
-            </div>
-        `;
+    if (
+        !billsList
+    ) {
 
         return;
     }
 
 
-    billingGrid.innerHTML =
+    if (
+        !currentBills.length
+    ) {
+
+        billsList.innerHTML = `
+            <div class="empty">
+                No bills waiting.
+            </div>
+        `;
+
+
+        return;
+    }
+
+
+    billsList.innerHTML =
         currentBills
             .map(
-                bill => `
-                    <div
-                        class="billing-card"
-                        data-bill-id="${bill.id}"
-                    >
+                bill => {
 
-                        <div class="billing-card-top">
+                    const active =
+                        String(
+                            bill.id
+                        ) ===
+                        String(
+                            selectedBillId
+                        );
 
-                            <div class="billing-table">
-                                ${escapeHtml(
-                                    bill.table_name
-                                )}
+
+                    return `
+                        <button
+                            type="button"
+                            class="
+                                bill-card
+                                ${
+                                    active
+                                        ? "active"
+                                        : ""
+                                }
+                            "
+                            data-bill-id="${escapeHtml(
+                                bill.id
+                            )}"
+                        >
+
+                            <div class="bill-card-top">
+
+                                <strong>
+                                    ${escapeHtml(
+                                        bill.table_name ||
+                                        "Table"
+                                    )}
+                                </strong>
+
+                                <span>
+                                    #${escapeHtml(
+                                        bill.bill_number ||
+                                        ""
+                                    )}
+                                </span>
+
                             </div>
 
 
-                            <div class="billing-total">
-                                ${money(
-                                    bill.grand_total
-                                )}
+                            <div class="bill-card-bottom">
+
+                                <span>
+                                    ${formatTime(
+                                        bill.created_at
+                                    )}
+                                </span>
+
+                                <strong>
+                                    ₹${money(
+                                        bill.grand_total ||
+                                        bill.total ||
+                                        0
+                                    )}
+                                </strong>
+
                             </div>
 
-                        </div>
-
-
-                        <div class="billing-bill">
-                            Bill #${bill.bill_number}
-                        </div>
-
-
-                        <div class="billing-status">
-                            ${formatStatus(
-                                bill.status
-                            )}
-                        </div>
-
-
-                        <div class="billing-time">
-                            ${
-                                formatDateTime(
-                                    bill.bill_requested_at ||
-                                    bill.created_at
-                                )
-                            }
-                        </div>
-
-                    </div>
-                `
+                        </button>
+                    `;
+                }
             )
             .join("");
 }
 
 
 // ============================================================
-// BILL CARD CLICK
+// EMPTY BILL
 // ============================================================
 
-billingGrid?.addEventListener(
+function renderEmptyBill() {
+
+    if (
+        !billDetails
+    ) {
+
+        return;
+    }
+
+
+    billDetails.innerHTML = `
+        <div class="empty">
+            Select a bill to view details.
+        </div>
+    `;
+}
+
+
+// ============================================================
+// BILL LIST CLICK
+// ============================================================
+
+billsList?.addEventListener(
     "click",
-    event => {
+    async event => {
 
         const card =
             event.target.closest(
-                ".billing-card"
+                "[data-bill-id]"
             );
 
 
@@ -534,8 +862,17 @@ billingGrid?.addEventListener(
         }
 
 
-        openBill(
-            card.dataset.billId
+        const billId =
+            card.dataset.billId;
+
+
+        if (!billId) {
+            return;
+        }
+
+
+        await openBill(
+            billId
         );
     }
 );
@@ -545,25 +882,65 @@ billingGrid?.addEventListener(
 // OPEN BILL
 // ============================================================
 
-async function openBill(orderId) {
+async function openBill(
+    billId
+) {
 
-    const {
-        data,
-        error
-    } =
-        await db.rpc(
-            "admin_get_bill_details",
-            {
-                p_session_token:
-                    sessionToken,
-
-                p_order_id:
-                    orderId
-            }
-        );
+    selectedBillId =
+        billId;
 
 
-    if (error) {
+    billFieldsDirty =
+        false;
+
+
+    renderBills();
+
+
+    if (
+        billDetails
+    ) {
+
+        billDetails.innerHTML = `
+            <div class="empty">
+                Loading bill...
+            </div>
+        `;
+    }
+
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await db.rpc(
+                "cashier_get_bill_details",
+                {
+                    p_session_token:
+                        sessionToken,
+
+                    p_bill_id:
+                        billId
+                }
+            );
+
+
+        if (error) {
+
+            throw error;
+        }
+
+
+        selectedBill =
+            data;
+
+
+        renderBillDetails();
+
+
+    } catch (error) {
 
         console.error(
             "Bill details error:",
@@ -573,153 +950,150 @@ async function openBill(orderId) {
 
         showToast(
             error.message ||
-            "Unable to open bill"
+            "Unable to load bill"
         );
+    }
+}
+
+
+// ============================================================
+// RENDER BILL DETAILS
+// ============================================================
+
+function renderBillDetails() {
+
+    if (
+        !billDetails ||
+        !selectedBill
+    ) {
 
         return;
     }
 
 
-    selectedBillId =
-        orderId;
-
-
-    selectedBillData =
-        data;
-    billFieldsDirty = false;
-
-    selectedPaymentMethod =
-        "cash";
-
-
-    paymentMethodButtons.forEach(
-        button => {
-
-            button.classList.toggle(
-                "active",
-                button.dataset.method ===
-                    "cash"
-            );
-        }
-    );
-
-
-    referenceInput.value =
-        "";
-
-
-    referenceInput.style.display =
-        "none";
-
-
-    renderBill();
-
-
-    billModal.classList.add(
-        "show"
-    );
-}
-
-
-// ============================================================
-// RENDER BILL
-// ============================================================
-
-function renderBill() {
-
-    const order =
-        selectedBillData?.order;
+    const bill =
+        selectedBill.bill ||
+        selectedBill;
 
 
     const items =
-        selectedBillData?.items ||
+        selectedBill.items ||
+        bill.items ||
         [];
 
 
-    if (!order) {
-        return;
-    }
-
-
-    billTitle.textContent =
-        `Bill #${order.bill_number}`;
-
-
-    billTableName.textContent =
-        `${order.table_name} • ${formatStatus(order.status)}`;
-
-
-   // Only fill values from DB when bill is first opened
-// or after a successful save.
-// While cashier is typing, don't overwrite them.
-
-if (!billFieldsDirty) {
-
-    discountInput.value =
+    const subtotal =
         Number(
-            order.discount_amount || 0
+            bill.subtotal ||
+            bill.item_total ||
+            0
         );
 
-    taxInput.value =
+
+    const tax =
         Number(
-            order.tax_amount || 0
+            bill.tax ||
+            bill.tax_amount ||
+            0
         );
 
-    serviceInput.value =
+
+    const discount =
         Number(
-            order.service_charge || 0
+            bill.discount ||
+            bill.discount_amount ||
+            0
         );
-}
 
 
-    if (!items.length) {
+    const grandTotal =
+        Number(
+            bill.grand_total ||
+            bill.total ||
+            (
+                subtotal +
+                tax -
+                discount
+            )
+        );
 
-        billItems.innerHTML = `
-            <div
-                style="
-                    padding:20px 0;
-                    text-align:center;
-                    color:#6b7280;
-                    font-size:11px;
-                "
-            >
-                No items found.
+
+    billDetails.innerHTML = `
+
+        <div class="bill-head">
+
+            <div>
+
+                <h2>
+                    ${escapeHtml(
+                        bill.table_name ||
+                        "Table"
+                    )}
+                </h2>
+
+                <p>
+                    Bill #${escapeHtml(
+                        bill.bill_number ||
+                        ""
+                    )}
+                </p>
+
             </div>
-        `;
 
-    } else {
+        </div>
 
-        billItems.innerHTML = `
-            <div class="bill-items">
 
-                ${
-                    items
+        <div class="bill-items">
+
+            ${
+                items.length
+
+                    ? items
                         .map(
                             item => `
+
                                 <div class="bill-item">
 
                                     <div>
 
-                                        <div class="bill-item-name">
+                                        <strong>
                                             ${escapeHtml(
-                                                item.item_name
+                                                item.item_name ||
+                                                item.name ||
+                                                "Item"
                                             )}
-                                        </div>
+                                        </strong>
 
-                                        <div class="bill-item-meta">
-                                            ${item.quantity}
-                                            ×
-                                            ${money(
-                                                item.unit_price
+                                        <small>
+                                            ${Number(
+                                                item.quantity ||
+                                                1
                                             )}
-                                        </div>
+                                            ×
+                                            ₹${money(
+                                                item.price ||
+                                                item.unit_price ||
+                                                0
+                                            )}
+                                        </small>
 
                                     </div>
 
 
                                     <strong>
-                                        ${money(
-                                            item.line_total
+                                        ₹${money(
+                                            item.total ||
+                                            (
+                                                Number(
+                                                    item.quantity ||
+                                                    1
+                                                ) *
+                                                Number(
+                                                    item.price ||
+                                                    item.unit_price ||
+                                                    0
+                                                )
+                                            )
                                         )}
                                     </strong>
 
@@ -727,342 +1101,275 @@ if (!billFieldsDirty) {
                             `
                         )
                         .join("")
-                }
+
+                    : `
+                        <div class="empty">
+                            No bill items.
+                        </div>
+                    `
+            }
+
+        </div>
+
+
+        <div class="bill-summary">
+
+            <div>
+                <span>
+                    Subtotal
+                </span>
+
+                <strong>
+                    ₹${money(
+                        subtotal
+                    )}
+                </strong>
+            </div>
+
+
+            <div>
+                <span>
+                    Tax
+                </span>
+
+                <strong>
+                    ₹${money(
+                        tax
+                    )}
+                </strong>
+            </div>
+
+
+            <div class="discount-row">
+
+                <label>
+                    Discount
+                </label>
+
+                <input
+                    type="number"
+                    id="discountInput"
+                    min="0"
+                    step="0.01"
+                    value="${discount}"
+                >
 
             </div>
-        `;
-    }
 
 
-    renderBillSummary();
-}
+            <div class="grand-total">
 
+                <span>
+                    Total
+                </span>
 
-// ============================================================
-// BILL SUMMARY
-// ============================================================
+                <strong
+                    id="grandTotalValue"
+                >
+                    ₹${money(
+                        grandTotal
+                    )}
+                </strong>
 
-function renderBillSummary() {
-
-    const order =
-        selectedBillData?.order;
-
-
-    if (!order) {
-        return;
-    }
-
-
-    const subtotal =
-        Number(
-            order.subtotal ||
-            0
-        );
-
-
-    const discount =
-        Math.max(
-            0,
-            Number(
-                discountInput.value ||
-                0
-            )
-        );
-
-
-    const tax =
-        Math.max(
-            0,
-            Number(
-                taxInput.value ||
-                0
-            )
-        );
-
-
-    const service =
-        Math.max(
-            0,
-            Number(
-                serviceInput.value ||
-                0
-            )
-        );
-
-
-    const total =
-        Math.max(
-            0,
-            subtotal
-            + tax
-            + service
-            - discount
-        );
-
-
-    billSummary.innerHTML = `
-
-        <div class="bill-summary-row">
-
-            <span>
-                Subtotal
-            </span>
-
-            <strong>
-                ${money(subtotal)}
-            </strong>
+            </div>
 
         </div>
 
 
-        <div class="bill-summary-row">
+        <div class="payment-section">
 
-            <span>
-                Tax
-            </span>
-
-            <strong>
-                ${money(tax)}
-            </strong>
-
-        </div>
+            <label>
+                Payment Method
+            </label>
 
 
-        <div class="bill-summary-row">
+            <select
+                id="paymentMethod"
+            >
 
-            <span>
-                Service Charge
-            </span>
+                <option value="cash">
+                    Cash
+                </option>
 
-            <strong>
-                ${money(service)}
-            </strong>
+                <option value="upi">
+                    UPI
+                </option>
 
-        </div>
+                <option value="card">
+                    Card
+                </option>
 
-
-        <div class="bill-summary-row">
-
-            <span>
-                Discount
-            </span>
-
-            <strong>
-                - ${money(discount)}
-            </strong>
+            </select>
 
         </div>
 
 
-        <div class="bill-summary-row grand">
+        <div class="bill-actions">
 
-            <span>
-                Total
-            </span>
+            <button
+                type="button"
+                id="printBillBtn"
+                class="secondary-btn"
+            >
+                Print Bill
+            </button>
 
-            <span>
-                ${money(total)}
-            </span>
+
+            <button
+                type="button"
+                id="completePaymentBtn"
+                class="primary-btn"
+            >
+                Complete Payment
+            </button>
 
         </div>
     `;
+
+
+    setupBillEvents(
+        subtotal,
+        tax
+    );
 }
 
 
 // ============================================================
-// LIVE BILL CALCULATION
+// BILL FIELD EVENTS
 // ============================================================
 
-[
-    discountInput,
-    taxInput,
-    serviceInput
+function setupBillEvents(
+    subtotal,
+    tax
+) {
 
-].forEach(input => {
+    const discountInput =
+        document.getElementById(
+            "discountInput"
+        );
 
-    input?.addEventListener(
+
+    const grandTotalValue =
+        document.getElementById(
+            "grandTotalValue"
+        );
+
+
+    const paymentMethod =
+        document.getElementById(
+            "paymentMethod"
+        );
+
+
+    const printBillBtn =
+        document.getElementById(
+            "printBillBtn"
+        );
+
+
+    const completePaymentBtn =
+        document.getElementById(
+            "completePaymentBtn"
+        );
+
+
+    // ========================================================
+    // DISCOUNT
+    // ========================================================
+
+    discountInput?.addEventListener(
         "input",
         () => {
 
-            // User manually edited bill.
-            // Live refresh must not overwrite these values.
-            billFieldsDirty = true;
+            billFieldsDirty =
+                true;
 
-            renderBillSummary();
+
+            const discount =
+                Math.max(
+                    0,
+                    Number(
+                        discountInput.value ||
+                        0
+                    )
+                );
+
+
+            const total =
+                Math.max(
+                    0,
+                    subtotal +
+                    tax -
+                    discount
+                );
+
+
+            if (
+                grandTotalValue
+            ) {
+
+                grandTotalValue.textContent =
+                    `₹${money(
+                        total
+                    )}`;
+            }
         }
     );
 
-});
 
+    paymentMethod?.addEventListener(
+        "change",
+        () => {
 
-// ============================================================
-// PAYMENT METHOD
-// ============================================================
-
-paymentMethodButtons.forEach(
-    button => {
-
-        button.addEventListener(
-            "click",
-            () => {
-
-                selectedPaymentMethod =
-                    button.dataset.method;
-
-
-                paymentMethodButtons.forEach(
-                    item =>
-                        item.classList.remove(
-                            "active"
-                        )
-                );
-
-
-                button.classList.add(
-                    "active"
-                );
-
-
-                referenceInput.style.display =
-                    selectedPaymentMethod ===
-                    "cash"
-                        ? "none"
-                        : "block";
-
-
-                if (
-                    selectedPaymentMethod ===
-                    "cash"
-                ) {
-
-                    referenceInput.value =
-                        "";
-                }
-            }
-        );
-    }
-);
-
-
-// ============================================================
-// UPDATE BILL
-// ============================================================
-
-updateBillBtn?.addEventListener(
-    "click",
-    updateBill
-);
-
-
-async function updateBill() {
-
-    if (!selectedBillId) {
-        return;
-    }
-
-
-    updateBillBtn.disabled =
-        true;
-
-
-    const oldText =
-        updateBillBtn.textContent;
-
-
-    updateBillBtn.textContent =
-        "Updating...";
-
-
-    try {
-
-        const {
-            data,
-            error
-        } =
-            await db.rpc(
-                "admin_update_bill",
-                {
-                    p_session_token:
-                        sessionToken,
-
-                    p_order_id:
-                        selectedBillId,
-
-                    p_discount:
-                        Number(
-                            discountInput.value ||
-                            0
-                        ),
-
-                    p_tax:
-                        Number(
-                            taxInput.value ||
-                            0
-                        ),
-
-                    p_service_charge:
-                        Number(
-                            serviceInput.value ||
-                            0
-                        )
-                }
-            );
-
-
-        if (error) {
-            throw error;
+            billFieldsDirty =
+                true;
         }
+    );
 
 
-        showToast(
-    data?.message ||
-    "Bill updated"
-);
+    // ========================================================
+    // PRINT
+    // ========================================================
+
+    printBillBtn?.addEventListener(
+        "click",
+        () => {
+
+            printCurrentBill();
+        }
+    );
 
 
-// Current bill ID ni first save chestunnam
-const currentBillId =
-    selectedBillId;
+    // ========================================================
+    // COMPLETE PAYMENT
+    // ========================================================
+
+    completePaymentBtn?.addEventListener(
+        "click",
+        async () => {
+
+            const discount =
+                Math.max(
+                    0,
+                    Number(
+                        discountInput?.value ||
+                        0
+                    )
+                );
 
 
-// User changes save ayyayi
-billFieldsDirty =
-    false;
+            const method =
+                paymentMethod?.value ||
+                "cash";
 
 
-// Billing cards refresh
-await loadBills();
-
-
-// Same bill ni fresh data tho reopen
-await openBill(
-    currentBillId
-);
-
-
-    } catch (error) {
-
-        console.error(
-            "Update bill error:",
-            error
-        );
-
-
-        showToast(
-            error.message ||
-            "Unable to update bill"
-        );
-
-
-    } finally {
-
-        updateBillBtn.disabled =
-            false;
-
-
-        updateBillBtn.textContent =
-            oldText;
-    }
+            await completePayment(
+                discount,
+                method,
+                completePaymentBtn
+            );
+        }
+    );
 }
 
 
@@ -1070,155 +1377,52 @@ await openBill(
 // COMPLETE PAYMENT
 // ============================================================
 
-completePaymentBtn?.addEventListener(
-    "click",
-    completePayment
-);
-
-
-async function completePayment() {
-
-    if (!selectedBillId) {
-        return;
-    }
-
+async function completePayment(
+    discount,
+    paymentMethod,
+    button
+) {
 
     if (
-        selectedPaymentMethod !==
-            "cash" &&
-        !referenceInput.value.trim()
+        !selectedBillId
     ) {
 
-        showToast(
-            "Enter payment reference number"
-        );
-
         return;
     }
-
-
-    const confirmed =
-        window.confirm(
-            `Complete ${selectedPaymentMethod.toUpperCase()} payment?`
-        );
-
-
-    if (!confirmed) {
-        return;
-    }
-
-
-    completePaymentBtn.disabled =
-        true;
 
 
     const originalText =
-        completePaymentBtn.textContent;
+        button.textContent;
 
 
-    completePaymentBtn.textContent =
+    button.disabled =
+        true;
+
+
+    button.textContent =
         "Processing...";
 
 
     try {
-
-        // --------------------------------------------
-        // SAVE CURRENT BILL VALUES FIRST
-        // --------------------------------------------
-
-        const updateResponse =
-            await db.rpc(
-                "admin_update_bill",
-                {
-                    p_session_token:
-                        sessionToken,
-
-                    p_order_id:
-                        selectedBillId,
-
-                    p_discount:
-                        Number(
-                            discountInput.value ||
-                            0
-                        ),
-
-                    p_tax:
-                        Number(
-                            taxInput.value ||
-                            0
-                        ),
-
-                    p_service_charge:
-                        Number(
-                            serviceInput.value ||
-                            0
-                        )
-                }
-            );
-
-
-        if (updateResponse.error) {
-
-            throw updateResponse.error;
-        }
-
-
-        // --------------------------------------------
-        // SAVE FINAL RECEIPT VALUES
-        // --------------------------------------------
-
-        const receiptData =
-            selectedBillData;
-
-
-        const receiptValues = {
-
-            discount:
-                Number(
-                    discountInput.value ||
-                    0
-                ),
-
-            tax:
-                Number(
-                    taxInput.value ||
-                    0
-                ),
-
-            service:
-                Number(
-                    serviceInput.value ||
-                    0
-                ),
-
-            paymentMethod:
-                selectedPaymentMethod
-        };
-
-
-        // --------------------------------------------
-        // COMPLETE PAYMENT
-        // --------------------------------------------
 
         const {
             data,
             error
         } =
             await db.rpc(
-                "admin_complete_payment",
+                "cashier_complete_payment",
                 {
                     p_session_token:
                         sessionToken,
 
-                    p_order_id:
+                    p_bill_id:
                         selectedBillId,
 
-                    p_payment_method:
-                        selectedPaymentMethod,
+                    p_discount:
+                        discount,
 
-                    p_reference_number:
-                        referenceInput.value
-                            .trim()
+                    p_payment_method:
+                        paymentMethod
                 }
             );
 
@@ -1235,19 +1439,33 @@ async function completePayment() {
         );
 
 
-        closeBill();
+        // ====================================================
+        // IMPORTANT:
+        // Keep current bill id before reload.
+        // Prevent discount fields from automatically resetting
+        // while editing.
+        // ====================================================
+
+        const currentBillId =
+            selectedBillId;
 
 
-        // Browser print for now.
-        // Later Android Bluetooth printer bridge goes here.
+        selectedBillId =
+            null;
 
-        printReceipt(
-            receiptData,
-            receiptValues
-        );
+
+        selectedBill =
+            null;
+
+
+        billFieldsDirty =
+            false;
 
 
         await loadBills();
+
+
+        renderEmptyBill();
 
 
     } catch (error) {
@@ -1260,687 +1478,100 @@ async function completePayment() {
 
         showToast(
             error.message ||
-            "Payment failed"
+            "Unable to complete payment"
         );
 
 
-    } finally {
-
-        completePaymentBtn.disabled =
+        button.disabled =
             false;
 
 
-        completePaymentBtn.textContent =
+        button.textContent =
             originalText;
     }
 }
 
 
 // ============================================================
-// PRINT RECEIPT
-// TEMP LOGO + TEMP QR
+// PRINT BILL
 // ============================================================
 
-function printReceipt(
-    billData,
-    values
-) {
+function printCurrentBill() {
 
-    const order =
-        billData?.order;
-
-
-    const restaurant =
-        billData?.restaurant ||
-        {};
-
-
-    const items =
-        billData?.items ||
-        [];
-
-
-    if (!order) {
-        return;
-    }
-
-
-    const subtotal =
-        Number(
-            order.subtotal ||
-            0
-        );
-
-
-    const tax =
-        Number(
-            values.tax ||
-            0
-        );
-
-
-    const service =
-        Number(
-            values.service ||
-            0
-        );
-
-
-    const discount =
-        Number(
-            values.discount ||
-            0
-        );
-
-
-    const total =
-        Math.max(
-            0,
-            subtotal +
-            tax +
-            service -
-            discount
-        );
-
-
-    // ========================================================
-    // TEMP LOGO
-    // Later replace
-    // ========================================================
-
-    const LOGO_URL =
-        "https://dummyimage.com/180x70/111827/ffffff&text=RESTAURANT";
-
-
-    // ========================================================
-    // TEMP QR
-    // Later replace with your real UPI QR/data
-    // ========================================================
-
-    const qrText =
-        encodeURIComponent(
-            `Bill ${order.bill_number} ${restaurant.name || "Restaurant"} ${total.toFixed(2)}`
-        );
-
-
-    const QR_URL =
-        `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${qrText}`;
-
-
-    const rows =
-        items
-            .map(
-                item => `
-                    <tr>
-
-                        <td>
-
-                            <strong>
-                                ${escapeHtml(
-                                    item.item_name
-                                )}
-                            </strong>
-
-                            <div class="small">
-                                ${item.quantity}
-                                ×
-                                ₹${Number(
-                                    item.unit_price
-                                ).toFixed(2)}
-                            </div>
-
-                        </td>
-
-
-                        <td class="right">
-                            ₹${Number(
-                                item.line_total
-                            ).toFixed(2)}
-                        </td>
-
-                    </tr>
-                `
-            )
-            .join("");
-
-
-    const receiptWindow =
-        window.open(
-            "",
-            "_blank",
-            "width=420,height=800"
-        );
-
-
-    if (!receiptWindow) {
+    if (
+        !selectedBill
+    ) {
 
         showToast(
-            "Please allow popups for printing"
+            "Select a bill first"
         );
+
 
         return;
     }
 
 
-    receiptWindow.document.write(`
-        <!DOCTYPE html>
-
-        <html>
-
-        <head>
-
-            <meta charset="UTF-8">
-
-            <title>
-                Bill #${order.bill_number}
-            </title>
-
-
-            <style>
-
-                * {
-                    box-sizing: border-box;
-                }
-
-
-                body {
-
-                    width: 72mm;
-
-                    margin: 0 auto;
-
-                    padding: 5mm 4mm;
-
-                    font-family:
-                        Arial,
-                        sans-serif;
-
-                    font-size: 11px;
-
-                    color: #000;
-
-                    background: #fff;
-
-                }
-
-
-                .center {
-                    text-align: center;
-                }
-
-
-                .logo {
-                    text-align: center;
-                    margin-bottom: 4px;
-                }
-
-
-                .logo img {
-                    max-width: 40mm;
-                    max-height: 16mm;
-                    object-fit: contain;
-                }
-
-
-                .restaurant {
-                    font-size: 17px;
-                    font-weight: bold;
-                    text-align: center;
-                }
-
-
-                .small {
-                    font-size: 9px;
-                    line-height: 1.4;
-                }
-
-
-                .line {
-                    border-top:
-                        1px dashed #000;
-
-                    margin: 8px 0;
-                }
-
-
-                .info {
-                    display: flex;
-                    justify-content: space-between;
-
-                    gap: 10px;
-
-                    font-size: 9px;
-                    margin: 3px 0;
-                }
-
-
-                table {
-                    width: 100%;
-                    border-collapse: collapse;
-                }
-
-
-                th,
-                td {
-                    padding: 5px 0;
-                    vertical-align: top;
-                }
-
-
-                th {
-                    border-bottom:
-                        1px solid #000;
-
-                    font-size: 9px;
-
-                    text-align: left;
-                }
-
-
-                .right {
-                    text-align: right;
-                }
-
-
-                .summary td {
-                    padding: 3px 0;
-                }
-
-
-                .grand td {
-                    padding-top: 7px;
-
-                    font-size: 15px;
-                    font-weight: bold;
-                }
-
-
-                .payment {
-                    margin-top: 8px;
-
-                    border:
-                        1px solid #000;
-
-                    border-radius: 4px;
-
-                    padding: 7px;
-                }
-
-
-                .qr {
-                    text-align: center;
-                    margin-top: 10px;
-                }
-
-
-                .qr img {
-                    width: 32mm;
-                    height: 32mm;
-                }
-
-
-                .footer {
-                    text-align: center;
-
-                    margin-top: 10px;
-
-                    font-size: 9px;
-
-                    line-height: 1.5;
-                }
-
-
-                @page {
-                    size: 80mm auto;
-                    margin: 0;
-                }
-
-
-                @media print {
-
-                    html,
-                    body {
-                        width: 72mm;
-                        margin: 0 auto;
-                    }
-                }
-
-            </style>
-
-        </head>
-
-
-        <body>
-
-
-            <div class="logo">
-
-                <img
-                    src="${LOGO_URL}"
-                    alt="Logo"
-                >
-
-            </div>
-
-
-            <div class="restaurant">
-
-                ${escapeHtml(
-                    restaurant.name ||
-                    "Restaurant"
-                )}
-
-            </div>
-
-
-            ${
-                restaurant.address
-                    ? `
-                        <div class="center small">
-                            ${escapeHtml(
-                                restaurant.address
-                            )}
-                        </div>
-                    `
-                    : ""
-            }
-
-
-            ${
-                restaurant.phone
-                    ? `
-                        <div class="center small">
-                            ${escapeHtml(
-                                restaurant.phone
-                            )}
-                        </div>
-                    `
-                    : ""
-            }
-
-
-            ${
-                restaurant.gst_number
-                    ? `
-                        <div class="center small">
-                            GST:
-                            ${escapeHtml(
-                                restaurant.gst_number
-                            )}
-                        </div>
-                    `
-                    : ""
-            }
-
-
-            <div class="line"></div>
-
-
-            <div class="info">
-
-                <span>
-                    Bill #${order.bill_number}
-                </span>
-
-
-                <span>
-                    ${escapeHtml(
-                        order.table_name
-                    )}
-                </span>
-
-            </div>
-
-
-            <div class="info">
-
-                <span>
-                    ${new Date()
-                        .toLocaleDateString(
-                            "en-IN"
-                        )}
-                </span>
-
-
-                <span>
-                    ${new Date()
-                        .toLocaleTimeString(
-                            "en-IN",
-                            {
-                                hour: "2-digit",
-                                minute: "2-digit"
-                            }
-                        )}
-                </span>
-
-            </div>
-
-
-            <div class="line"></div>
-
-
-            <table>
-
-                <thead>
-
-                    <tr>
-
-                        <th>
-                            Item
-                        </th>
-
-                        <th class="right">
-                            Amount
-                        </th>
-
-                    </tr>
-
-                </thead>
-
-
-                <tbody>
-
-                    ${rows}
-
-                </tbody>
-
-            </table>
-
-
-            <div class="line"></div>
-
-
-            <table class="summary">
-
-                <tr>
-
-                    <td>
-                        Subtotal
-                    </td>
-
-                    <td class="right">
-                        ₹${subtotal.toFixed(2)}
-                    </td>
-
-                </tr>
-
-
-                <tr>
-
-                    <td>
-                        Tax
-                    </td>
-
-                    <td class="right">
-                        ₹${tax.toFixed(2)}
-                    </td>
-
-                </tr>
-
-
-                <tr>
-
-                    <td>
-                        Service
-                    </td>
-
-                    <td class="right">
-                        ₹${service.toFixed(2)}
-                    </td>
-
-                </tr>
-
-
-                <tr>
-
-                    <td>
-                        Discount
-                    </td>
-
-                    <td class="right">
-                        -₹${discount.toFixed(2)}
-                    </td>
-
-                </tr>
-
-
-                <tr class="grand">
-
-                    <td>
-                        TOTAL
-                    </td>
-
-                    <td class="right">
-                        ₹${total.toFixed(2)}
-                    </td>
-
-                </tr>
-
-            </table>
-
-
-            <div class="payment">
-
-                Payment:
-                <strong>
-                    ${escapeHtml(
-                        String(
-                            values.paymentMethod ||
-                            "cash"
-                        ).toUpperCase()
-                    )}
-                </strong>
-
-            </div>
-
-
-            <div class="qr">
-
-                <strong>
-                    Scan QR
-                </strong>
-
-                <br><br>
-
-
-                <img
-                    src="${QR_URL}"
-                    alt="QR"
-                >
-
-
-                <div class="small">
-                    Scan for payment / bill details
-                </div>
-
-            </div>
-
-
-            <div class="line"></div>
-
-
-            <div class="footer">
-
-                ${escapeHtml(
-                    restaurant.receipt_footer ||
-                    "Thank you! Visit Again."
-                )}
-
-            </div>
-
-
-            <script>
-
-                window.onload =
-                    function() {
-
-                        setTimeout(
-                            function() {
-
-                                window.print();
-
-                            },
-                            600
-                        );
-
-                    };
-
-            <\/script>
-
-
-        </body>
-
-        </html>
-    `);
-
-
-    receiptWindow.document.close();
+    // Temporary browser print.
+    // Later Android Bluetooth thermal printer
+    // bridge ni ikkada connect chestam.
+
+    window.print();
 }
 
 
 // ============================================================
-// CLOSE BILL
+// LIVE REFRESH
 // ============================================================
 
-function closeBill() {
+async function refreshCashier() {
 
-    billModal.classList.remove(
-        "show"
-    );
+    // User discount/payment fields edit chestunte
+    // current bill ni reopen cheyyakudadhu.
 
+    if (
+        billFieldsDirty
+    ) {
 
-    selectedBillId =
-        null;
-
-
-    selectedBillData =
-        null;
+        await loadBills();
 
 
-    selectedPaymentMethod =
-        "cash";
-}
+        return;
+    }
 
 
-closeBillModalBtn?.addEventListener(
-    "click",
-    closeBill
-);
+    const currentBillId =
+        selectedBillId;
 
 
-billModal?.addEventListener(
-    "click",
-    event => {
+    await loadBills();
+
+
+    if (
+        currentBillId
+    ) {
+
+        const stillExists =
+            currentBills.some(
+                bill =>
+                    String(
+                        bill.id
+                    ) ===
+                    String(
+                        currentBillId
+                    )
+            );
+
 
         if (
-            event.target ===
-            billModal
+            stillExists
         ) {
 
-            closeBill();
+            await openBill(
+                currentBillId
+            );
         }
     }
-);
+}
 
 
 // ============================================================
@@ -1949,7 +1580,9 @@ billModal?.addEventListener(
 
 function startLiveSync() {
 
-    if (liveTimer) {
+    if (
+        liveTimer
+    ) {
 
         clearInterval(
             liveTimer
@@ -1965,46 +1598,12 @@ function startLiveSync() {
                     document.visibilityState !==
                     "visible"
                 ) {
+
                     return;
                 }
 
 
-                await loadBills();
-
-
-                if (selectedBillId) {
-
-                    // Keep opened bill live as well.
-
-                    const openedId =
-                        selectedBillId;
-
-
-                    const {
-                        data,
-                        error
-                    } =
-                        await db.rpc(
-                            "admin_get_bill_details",
-                            {
-                                p_session_token:
-                                    sessionToken,
-
-                                p_order_id:
-                                    openedId
-                            }
-                        );
-
-
-                    if (!error && data) {
-
-                        selectedBillData =
-                            data;
-
-
-                        renderBill();
-                    }
-                }
+                await refreshCashier();
 
             },
             2000
@@ -2013,19 +1612,19 @@ function startLiveSync() {
 
 
 // ============================================================
-// FOREGROUND REFRESH
+// APP RETURNS TO FOREGROUND
 // ============================================================
 
 document.addEventListener(
     "visibilitychange",
-    () => {
+    async () => {
 
         if (
             document.visibilityState ===
             "visible"
         ) {
 
-            loadBills();
+            await refreshCashier();
         }
     }
 );
@@ -2041,7 +1640,9 @@ logoutBtn?.addEventListener(
 
         try {
 
-            if (liveTimer) {
+            if (
+                liveTimer
+            ) {
 
                 clearInterval(
                     liveTimer
@@ -2049,7 +1650,9 @@ logoutBtn?.addEventListener(
             }
 
 
-            if (sessionToken) {
+            if (
+                sessionToken
+            ) {
 
                 await db.rpc(
                     "staff_logout",
@@ -2083,9 +1686,12 @@ logoutBtn?.addEventListener(
 
 async function init() {
 
-    if (!sessionToken) {
+    if (
+        !sessionToken
+    ) {
 
         goLogin();
+
 
         return;
     }
@@ -2093,17 +1699,58 @@ async function init() {
 
     try {
 
+        // ====================================================
+        // CASHIER INFO
+        // ====================================================
+
         await loadCashierInfo();
+
+
+        // ====================================================
+        // BROWSER FALLBACK NOTIFICATION PERMISSION
+        // Android app permission is handled in MainActivity.kt
+        // ====================================================
+
+        await requestStaffNotificationPermission();
+
+
+        // ====================================================
+        // INITIAL BILLS
+        // Existing bills only cache అవుతాయి.
+        // Notification రావదు.
+        // ====================================================
 
         await loadBills();
 
 
-        if (loader) {
+        // ====================================================
+        // EMPTY STATE
+        // ====================================================
+
+        if (
+            !selectedBillId
+        ) {
+
+            renderEmptyBill();
+        }
+
+
+        // ====================================================
+        // HIDE LOADER
+        // ====================================================
+
+        if (
+            loader
+        ) {
 
             loader.style.display =
                 "none";
         }
 
+
+        // ====================================================
+        // START 2 SECOND LIVE CHECK
+        // ====================================================
 
         startLiveSync();
 
@@ -2116,7 +1763,9 @@ async function init() {
         );
 
 
-        if (loader) {
+        if (
+            loader
+        ) {
 
             loader.style.display =
                 "none";
