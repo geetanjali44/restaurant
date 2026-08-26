@@ -51,6 +51,20 @@ let isLoadingOrders = false;
 
 
 // ============================================================
+// KITCHEN NOTIFICATION STATE
+// ============================================================
+
+// First load lo already existing orders ki
+// notification pampakunda cache initialize chestam.
+
+let kitchenNotificationInitialized =
+    false;
+
+const kitchenKnownOrderIds =
+    new Set();
+
+
+// ============================================================
 // ELEMENTS
 // ============================================================
 
@@ -243,6 +257,390 @@ function showToast(message) {
 
 
 // ============================================================
+// STAFF NOTIFICATION
+// ============================================================
+
+function sendStaffNotification(
+    title,
+    body,
+    tag = ""
+) {
+
+    try {
+
+        // ====================================================
+        // ANDROID WEBVIEW NATIVE NOTIFICATION
+        // ====================================================
+
+        if (
+            window.AndroidNotification &&
+            typeof window
+                .AndroidNotification
+                .showNotification ===
+                "function"
+        ) {
+
+            window.AndroidNotification
+                .showNotification(
+                    String(title),
+                    String(body)
+                );
+
+            return;
+        }
+
+
+        // ====================================================
+        // NORMAL BROWSER FALLBACK
+        // ====================================================
+
+        if (
+            "Notification" in window &&
+            Notification.permission ===
+                "granted"
+        ) {
+
+            new Notification(
+                String(title),
+                {
+                    body:
+                        String(body),
+
+                    tag:
+                        String(
+                            tag ||
+                            title
+                        )
+                }
+            );
+        }
+
+    } catch (error) {
+
+        console.log(
+            "Notification unavailable:",
+            error
+        );
+    }
+}
+
+
+// ============================================================
+// REQUEST BROWSER NOTIFICATION PERMISSION
+// ============================================================
+
+async function requestStaffNotificationPermission() {
+
+    try {
+
+        if (
+            "Notification" in window &&
+            Notification.permission ===
+                "default"
+        ) {
+
+            await Notification
+                .requestPermission();
+        }
+
+    } catch (error) {
+
+        console.log(
+            "Notification permission unavailable:",
+            error
+        );
+    }
+}
+
+
+// ============================================================
+// NOTIFICATION VIBRATION
+// ============================================================
+
+function vibrateStaffNotification() {
+
+    try {
+
+        if (
+            "vibrate" in navigator
+        ) {
+
+            navigator.vibrate([
+                250,
+                120,
+                250,
+                120,
+                400
+            ]);
+        }
+
+    } catch (error) {
+
+        console.log(
+            "Vibration unavailable:",
+            error
+        );
+    }
+}
+
+
+// ============================================================
+// NOTIFICATION SOUND
+// ============================================================
+
+function playStaffNotificationSound() {
+
+    try {
+
+        const AudioContextClass =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+
+        if (!AudioContextClass) {
+            return;
+        }
+
+
+        const context =
+            new AudioContextClass();
+
+
+        const oscillator =
+            context.createOscillator();
+
+
+        const gain =
+            context.createGain();
+
+
+        oscillator.connect(
+            gain
+        );
+
+
+        gain.connect(
+            context.destination
+        );
+
+
+        oscillator.type =
+            "sine";
+
+
+        oscillator.frequency.value =
+            880;
+
+
+        gain.gain.setValueAtTime(
+            0.22,
+            context.currentTime
+        );
+
+
+        gain.gain
+            .exponentialRampToValueAtTime(
+                0.01,
+                context.currentTime +
+                    0.4
+            );
+
+
+        oscillator.start();
+
+
+        oscillator.stop(
+            context.currentTime +
+                0.4
+        );
+
+    } catch (error) {
+
+        console.log(
+            "Sound unavailable:",
+            error
+        );
+    }
+}
+
+
+// ============================================================
+// NOTIFY KITCHEN
+// ============================================================
+
+function notifyKitchen(
+    title,
+    body,
+    tag
+) {
+
+    showToast(
+        title
+    );
+
+
+    vibrateStaffNotification();
+
+
+    playStaffNotificationSound();
+
+
+    sendStaffNotification(
+        title,
+        body,
+        tag
+    );
+}
+
+
+// ============================================================
+// CHECK NEW KITCHEN ORDERS
+// ============================================================
+
+function checkKitchenNewOrderNotifications(
+    orders
+) {
+
+    const rows =
+        Array.isArray(orders)
+            ? orders
+            : [];
+
+
+    // ========================================================
+    // FIRST LOAD
+    // ========================================================
+
+    if (
+        !kitchenNotificationInitialized
+    ) {
+
+        rows.forEach(
+            order => {
+
+                kitchenKnownOrderIds.add(
+                    String(
+                        order.id
+                    )
+                );
+            }
+        );
+
+
+        kitchenNotificationInitialized =
+            true;
+
+
+        return;
+    }
+
+
+    // ========================================================
+    // DETECT NEW ORDER
+    // ========================================================
+
+    rows.forEach(
+        order => {
+
+            const orderId =
+                String(
+                    order.id
+                );
+
+
+            if (
+                kitchenKnownOrderIds
+                    .has(
+                        orderId
+                    )
+            ) {
+
+                return;
+            }
+
+
+            kitchenKnownOrderIds.add(
+                orderId
+            );
+
+
+            // Only incoming confirmed orders
+            // should notify kitchen.
+
+            if (
+                order.status !==
+                "confirmed"
+            ) {
+
+                return;
+            }
+
+
+            const tableName =
+                order.table_name ||
+                "Table";
+
+
+            const billNumber =
+                order.bill_number ||
+                "";
+
+
+            const title =
+                `New Order • ${tableName}`;
+
+
+            const body =
+                `Bill #${billNumber} received. Start preparing.`;
+
+
+            notifyKitchen(
+                title,
+                body,
+                `kitchen-new-${orderId}`
+            );
+        }
+    );
+
+
+    // ========================================================
+    // REMOVE OLD IDs FROM CACHE
+    // ========================================================
+
+    const activeIds =
+        new Set(
+            rows.map(
+                order =>
+                    String(
+                        order.id
+                    )
+            )
+        );
+
+
+    [
+        ...kitchenKnownOrderIds
+
+    ].forEach(
+        orderId => {
+
+            if (
+                !activeIds.has(
+                    orderId
+                )
+            ) {
+
+                kitchenKnownOrderIds
+                    .delete(
+                        orderId
+                    );
+            }
+        }
+    );
+}
+
+
+// ============================================================
 // GO LOGIN
 // ============================================================
 
@@ -316,7 +714,8 @@ async function loadKitchenOrders() {
     }
 
 
-    isLoadingOrders = true;
+    isLoadingOrders =
+        true;
 
 
     try {
@@ -349,10 +748,20 @@ async function loadKitchenOrders() {
             data || [];
 
 
+        // ====================================================
+        // CHECK NEW ORDER NOTIFICATION
+        // ====================================================
+
+        checkKitchenNewOrderNotifications(
+            currentOrders
+        );
+
+
         await loadAllOrderDetails();
 
 
         updateStats();
+
 
         renderOrders();
 
@@ -363,6 +772,7 @@ async function loadKitchenOrders() {
             "Kitchen refresh error:",
             error
         );
+
 
     } finally {
 
@@ -797,6 +1207,7 @@ ordersGrid?.addEventListener(
             !orderId ||
             !action
         ) {
+
             return;
         }
 
@@ -826,6 +1237,7 @@ async function updateKitchenStatus(
             "ready"
         ].includes(status)
     ) {
+
         return;
     }
 
@@ -926,6 +1338,7 @@ function startLiveSync() {
                     document.visibilityState !==
                     "visible"
                 ) {
+
                     return;
                 }
 
@@ -1021,6 +1434,12 @@ async function init() {
 
         await loadKitchenInfo();
 
+
+        // Browser notification fallback permission
+        await requestStaffNotificationPermission();
+
+
+        // First load initializes order cache.
         await loadKitchenOrders();
 
 
