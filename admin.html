@@ -3,10 +3,7 @@
 <head>
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <title>Restaurant Admin</title>
 
@@ -642,8 +639,8 @@
             }
 
             .sidebar {
-                display: none;
-            }
+        display: flex;
+    }
 
             .main {
                 padding: 17px;
@@ -655,17 +652,24 @@
                 justify-content: space-between;
                 margin-bottom: 20px;
             }
+            .mobile-head-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
 
             .mobile-head strong {
                 font-size: 16px;
             }
 
             .mobile-head button {
-                border: 1px solid var(--border);
-                background: white;
-                padding: 8px 11px;
-                border-radius: 8px;
-            }
+    border: 1px solid var(--border);
+    background: white;
+    padding: 10px 11px;
+    border-radius: 8px;
+
+    margin-left: 12px;
+}
 
             .tables {
                 grid-template-columns: repeat(2,1fr);
@@ -1505,6 +1509,718 @@ textarea.form-textarea {
     }
 }
 
+/* =========================================================
+   PREMIUM MOBILE APP UI
+   Desktop styles/functions remain unchanged.
+   ========================================================= */
+
+.mobile-head-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mobile-menu-btn,
+.sidebar-overlay {
+    display: none;
+}
+
+@media (max-width: 768px) {
+
+    html,
+    body {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        background: #f5f6f8;
+    }
+
+    body {
+        min-width: 0;
+        min-height: 100dvh;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .layout {
+        display: block;
+        width: 100%;
+        min-height: 100dvh;
+    }
+
+    /* MOBILE APP HEADER */
+   /* ALL MOBILE PHONES - TOP SAFE SPACE */
+    body {
+        padding-top: max(14px, env(safe-area-inset-top));
+    }
+
+    .mobile-head {
+        position: sticky;
+        top: 0;
+        z-index: 900;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+
+        width: 100%;
+        min-height: 58px;
+
+        margin: 0 0 18px;
+
+        padding:
+            30px
+            max(16px, env(safe-area-inset-right))
+            10px
+            max(16px, env(safe-area-inset-left));
+
+        /* REMOVED BACKGROUND */
+        background: transparent;
+
+        /* REMOVED SHADOW */
+        box-shadow: none;
+
+        /* REMOVED BLUR */
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+
+        /* REMOVE BOTTOM LINE */
+        border-bottom: none;
+    }
+
+
+    .mobile-head-left {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        min-width: 0;
+    }
+
+    .mobile-head strong {
+        display: block;
+        max-width: 165px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #101114;
+        font-size: 16px;
+        font-weight: 800;
+        letter-spacing: -.35px;
+    }
+
+    
+
+    .mobile-menu-btn:active {
+        transform: scale(.96);
+        background: #f3f4f6 !important;
+    }
+
+    #mobileLogoutBtn {
+        width: auto;
+        height: 40px;
+        padding: 0 13px;
+        border: 1px solid #e4e7eb;
+        border-radius: 12px;
+        background: #fff;
+        color: #525866;
+        font-size: 10px;
+        font-weight: 750;
+        cursor: pointer;
+    }
+
+    /* MOBILE DRAWER */
+    .sidebar {
+        display: flex !important;
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        z-index: 2000;
+        width: 286px !important;
+        max-width: 84vw;
+        height: 100dvh;
+        padding:
+            calc(24px + env(safe-area-inset-top))
+            15px
+            calc(18px + env(safe-area-inset-bottom));
+        overflow-y: auto;
+        background: #111214 !important;
+        color: #fff;
+        transform: translateX(-105%);
+        transition: transform .28s cubic-bezier(.22,.8,.3,1);
+        box-shadow: 22px 0 52px rgba(0,0,0,.22);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .sidebar .brand {
+        padding: 4px 9px 24px;
+    }
+
+    .sidebar .brand-title {
+        color: #fff;
+        font-size: 19px;
+        font-weight: 800;
+        letter-spacing: -.45px;
+    }
+
+    .sidebar .brand-sub {
+        margin-top: 5px;
+        color: #8f949e;
+        font-size: 10px;
+    }
+
+    .sidebar .nav {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .sidebar .nav button {
+        width: 100%;
+        min-height: 47px;
+        padding: 0 14px;
+        display: flex;
+        align-items: center;
+        border: 0;
+        border-radius: 12px;
+        background: transparent;
+        color: #a9adb5;
+        font-size: 13px;
+        font-weight: 650;
+        text-align: left;
+    }
+
+    .sidebar .nav button:hover {
+        background: rgba(255,255,255,.055);
+        color: #fff;
+    }
+
+    .sidebar .nav button.active {
+        background: #fff;
+        color: #111827;
+        font-weight: 800;
+        box-shadow: 0 4px 14px rgba(0,0,0,.12);
+    }
+
+    .sidebar-user {
+        margin-top: auto;
+        padding: 17px 8px 3px;
+        border-top: 1px solid rgba(255,255,255,.09);
+    }
+
+    .sidebar-user strong {
+        color: #fff;
+        font-size: 12px;
+    }
+
+    .sidebar-user span {
+        margin-top: 4px;
+        color: #8f949e;
+        font-size: 10px;
+    }
+
+    .sidebar-user .logout {
+        height: 43px;
+        margin-top: 13px;
+        border-radius: 11px;
+        background: rgba(255,255,255,.08);
+        color: #fff;
+    }
+
+    .sidebar-overlay {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 1900;
+        background: rgba(8,10,14,.48);
+        opacity: 0;
+        visibility: hidden;
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+        transition: opacity .25s ease, visibility .25s ease;
+    }
+
+    .sidebar-overlay.show {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    /* PAGE */
+    .main {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0;
+        margin: 0 !important;
+        padding:
+            0
+            max(16px, env(safe-area-inset-right))
+            calc(32px + env(safe-area-inset-bottom))
+            max(16px, env(safe-area-inset-left)) !important;
+        overflow-x: hidden;
+    }
+
+    .section {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .top {
+        width: 100%;
+        margin-bottom: 18px;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .top h1 {
+        font-size: 22px;
+        line-height: 1.2;
+        letter-spacing: -.65px;
+    }
+
+    .top p {
+        margin-top: 5px;
+        font-size: 10.5px;
+        line-height: 1.5;
+    }
+
+    .live {
+        flex-shrink: 0;
+        padding: 7px 9px;
+        font-size: 9px;
+    }
+
+    /* DASHBOARD STATS */
+    .stats,
+    .report-stats {
+        display: grid;
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .stat {
+        width: 100%;
+        min-width: 0;
+        min-height: 104px;
+        padding: 15px;
+        border: 1px solid #e8eaee;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 5px 18px rgba(17,24,39,.028);
+    }
+
+    .stat-label {
+        color: #747986;
+        font-size: 10px;
+        line-height: 1.35;
+    }
+
+    .stat-value {
+        margin-top: 10px;
+        overflow: hidden;
+        color: #111318;
+        font-size: 22px;
+        letter-spacing: -.65px;
+        text-overflow: ellipsis;
+    }
+
+    /* CONTENT / PANELS */
+    .content,
+    .reports-two-column {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .panel {
+        width: 100%;
+        min-width: 0;
+        border: 1px solid #e8eaee;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 5px 18px rgba(17,24,39,.022);
+    }
+
+    .panel-head {
+        padding: 15px;
+        gap: 8px;
+    }
+
+    .panel-head h2 {
+        font-size: 14px;
+    }
+
+    .panel-head p {
+        font-size: 10px;
+    }
+
+    .panel-body {
+        padding: 13px;
+    }
+
+    /* TABLE CARDS */
+    .tables {
+        display: grid;
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        gap: 9px;
+    }
+
+    .table-card {
+        width: 100%;
+        min-width: 0;
+        min-height: 128px;
+        padding: 13px;
+        border-radius: 14px;
+        border-color: #e8eaee;
+        box-shadow: none;
+    }
+
+    .table-card:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    .table-name {
+        font-size: 13px;
+    }
+
+    .table-total {
+        margin-top: 16px;
+        font-size: 17px;
+    }
+
+    .table-meta {
+        font-size: 9px;
+        line-height: 1.4;
+    }
+
+    .table-actions {
+        flex-wrap: wrap;
+    }
+
+    .table-actions button {
+        min-height: 32px;
+        padding: 6px 9px;
+    }
+
+    /* ORDER / BILLING / STAFF CARDS */
+    .admin-orders-grid,
+    .billing-grid,
+    .staff-grid {
+        display: grid;
+        grid-template-columns: 1fr !important;
+        gap: 10px;
+    }
+
+    .admin-order-card,
+    .billing-card,
+    .staff-card {
+        width: 100%;
+        min-width: 0;
+        padding: 15px;
+        border-radius: 15px;
+        border-color: #e8eaee;
+        box-shadow: 0 4px 14px rgba(17,24,39,.022);
+    }
+
+    .orders-toolbar,
+    .category-bar {
+        scrollbar-width: none;
+    }
+
+    .orders-toolbar::-webkit-scrollbar,
+    .category-bar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .orders-toolbar {
+        margin-left: -16px;
+        margin-right: -16px;
+        padding: 0 16px 8px;
+    }
+
+    .order-filter {
+        min-height: 38px;
+        padding: 0 13px;
+    }
+
+    /* MENU */
+    .menu-top-actions {
+        display: flex;
+        flex-direction: row !important;
+        gap: 7px;
+    }
+
+    .menu-top-actions button {
+        min-height: 40px;
+    }
+
+    .category-bar {
+        margin-left: -16px;
+        margin-right: -16px;
+        padding: 0 16px 12px;
+    }
+
+    .category-chip {
+        min-height: 38px;
+        padding: 0 14px;
+    }
+
+    .menu-search {
+        width: 100%;
+        max-width: none;
+        height: 46px;
+        border-radius: 12px;
+        font-size: 16px;
+    }
+
+    .menu-items-grid {
+        display: grid;
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        gap: 9px;
+    }
+
+    .menu-item-card {
+        min-width: 0;
+        border-radius: 14px;
+        border-color: #e8eaee;
+    }
+
+    .menu-item-image {
+        height: 105px;
+    }
+
+    .menu-item-body {
+        padding: 11px;
+    }
+
+    .menu-item-name {
+        font-size: 12px;
+        line-height: 1.35;
+    }
+
+    .menu-item-description {
+        font-size: 9px;
+    }
+
+    .menu-item-price {
+        margin-top: 9px;
+        font-size: 15px;
+    }
+
+    .item-actions {
+        flex-wrap: wrap;
+    }
+
+    /* REPORTS */
+    .payment-report-grid {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        gap: 8px;
+        padding: 13px;
+    }
+
+    .report-filter {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .report-filter input {
+        width: 100%;
+    }
+
+    .report-filter button {
+        grid-column: 1/-1;
+        min-height: 43px;
+    }
+
+    .history-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .history-table {
+        min-width: 650px;
+    }
+
+    /* BUTTONS / INPUTS */
+    .add-table-btn,
+    .secondary-action-btn {
+        min-height: 41px;
+        padding: 0 12px;
+        border-radius: 11px;
+    }
+
+    input,
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+
+    /* BILLING */
+    .bill-edit-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .billing-actions {
+        gap: 7px;
+    }
+
+    /* MODALS AS APP BOTTOM SHEETS */
+    .modal {
+        align-items: flex-end;
+        padding: 0;
+        background: rgba(7,9,12,.48);
+    }
+
+    .modal-box {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 90dvh;
+        margin: 0;
+        padding:
+            20px
+            17px
+            calc(20px + env(safe-area-inset-bottom));
+        overflow-y: auto;
+        border-radius: 22px 22px 0 0;
+        animation: mobileSheetIn .23s ease;
+    }
+
+    @keyframes mobileSheetIn {
+        from {
+            transform: translateY(28px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    /* TOAST */
+    .toast {
+        left: 16px;
+        right: 16px;
+        bottom: calc(16px + env(safe-area-inset-bottom));
+        padding: 12px 14px;
+        text-align: center;
+        border-radius: 12px;
+    }
+}
+
+@media (max-width: 370px) {
+    .main {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    .stats {
+        gap: 8px;
+    }
+
+    .stat {
+        padding: 12px;
+    }
+
+    .tables,
+    .menu-items-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 769px) {
+    .mobile-menu-btn,
+    .sidebar-overlay {
+        display: none !important;
+    }
+}
+/* =========================================
+   ONLY RESTAURANT TABLES + RECENT ORDERS
+   REMOVE OUTER PANEL BOX
+   ========================================= */
+
+
+
+.content:has(#overviewTablesGrid) > .panel {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+}
+
+.content:has(#overviewTablesGrid) > .panel .panel-head {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.content:has(#overviewTablesGrid) > .panel .panel-body {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+@media (max-width: 768px) {
+
+    /* ENTIRE MOBILE HEADER LEFT + RIGHT SPACE */
+    .mobile-head {
+        width: calc(100% - 32px) !important;
+        margin-left: 16px !important;
+        margin-right: 16px !important;
+
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    /* LEFT GROUP */
+    .mobile-head-left {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+    }
+
+    /* HAMBURGER */
+    .mobile-menu-btn {
+        margin: 0 !important;
+        padding: 0 !important;
+
+        width: 42px !important;
+        min-width: 42px !important;
+        height: 42px !important;
+
+        display: grid !important;
+        place-items: center !important;
+
+        border: 1px solid #e4e7eb !important;
+        border-radius: 13px !important;
+
+        background: #fff !important;
+        box-shadow: none !important;
+    }
+
+    /* LOGOUT */
+    #mobileLogoutBtn {
+        margin-right: 0 !important;
+    }
+}
+
     </style>
 </head>
 
@@ -1601,20 +2317,37 @@ textarea.form-textarea {
 
     </aside>
 
+<div
+    class="sidebar-overlay"
+    id="sidebarOverlay"
+></div>
 
-    <main class="main">
+<main class="main">
 
         <div class="mobile-head">
 
-            <strong id="mobileRestaurantName">
-                Restaurant
-            </strong>
+    <div class="mobile-head-left">
 
-            <button id="mobileLogoutBtn">
-                Logout
-            </button>
+        <button
+            type="button"
+            class="mobile-menu-btn"
+            id="mobileMenuBtn"
+            aria-label="Open menu"
+        >
+            ☰
+        </button>
 
-        </div>
+        <strong id="mobileRestaurantName">
+            Restaurant
+        </strong>
+
+    </div>
+
+    <button id="mobileLogoutBtn">
+        Logout
+    </button>
+
+</div>
 
 
         <!-- OVERVIEW -->
