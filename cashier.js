@@ -1568,7 +1568,570 @@ async function completePayment() {
     }
 }
 
+// ============================================================
+// ANDROID BLUETOOTH PRINTER
+// ============================================================
 
+const SAVED_PRINTER_KEY =
+    "restaurant_bluetooth_printer";
+
+
+// ============================================================
+// CHECK ANDROID PRINTER BRIDGE
+// ============================================================
+
+function hasAndroidPrinter() {
+
+    return !!(
+        window.AndroidPrinter &&
+        typeof window.AndroidPrinter
+            .printReceipt ===
+            "function"
+    );
+}
+
+
+// ============================================================
+// GET PAIRED PRINTERS
+// ============================================================
+
+function getPairedPrinters() {
+
+    if (!hasAndroidPrinter()) {
+        return [];
+    }
+
+
+    try {
+
+        const result =
+            window.AndroidPrinter
+                .getPairedPrinters();
+
+
+        if (!result) {
+            return [];
+        }
+
+
+        return String(result)
+            .split("|")
+            .map(
+                name =>
+                    name.trim()
+            )
+            .filter(Boolean);
+
+
+    } catch (error) {
+
+        console.error(
+            "Get printers error:",
+            error
+        );
+
+
+        return [];
+    }
+}
+
+
+// ============================================================
+// GET / SELECT PRINTER
+// ============================================================
+
+function getSelectedPrinter() {
+
+    const printers =
+        getPairedPrinters();
+
+
+    if (!printers.length) {
+
+        showToast(
+            "No paired Bluetooth printer found"
+        );
+
+
+        return null;
+    }
+
+
+    const savedPrinter =
+        localStorage.getItem(
+            SAVED_PRINTER_KEY
+        );
+
+
+    if (
+        savedPrinter &&
+        printers.includes(
+            savedPrinter
+        )
+    ) {
+
+        return savedPrinter;
+    }
+
+
+    // First paired printer use chestam.
+    // Later UI lo printer selector add cheyyachu.
+
+    const printerName =
+        printers[0];
+
+
+    localStorage.setItem(
+        SAVED_PRINTER_KEY,
+        printerName
+    );
+
+
+    return printerName;
+}
+
+
+// ============================================================
+// CONNECT PRINTER
+// ============================================================
+
+function connectCashierPrinter() {
+
+    if (!hasAndroidPrinter()) {
+
+        showToast(
+            "Bluetooth printing works only in Android app"
+        );
+
+
+        return null;
+    }
+
+
+    const printerName =
+        getSelectedPrinter();
+
+
+    if (!printerName) {
+        return null;
+    }
+
+
+    try {
+
+        window.AndroidPrinter
+            .connectPrinter(
+                printerName
+            );
+
+
+        showToast(
+            `Connecting ${printerName}...`
+        );
+
+
+        return printerName;
+
+
+    } catch (error) {
+
+        console.error(
+            "Printer connection error:",
+            error
+        );
+
+
+        showToast(
+            "Unable to connect printer"
+        );
+
+
+        return null;
+    }
+}
+
+
+// ============================================================
+// BUILD THERMAL RECEIPT TEXT
+// ============================================================
+
+function buildThermalReceipt(
+    billData,
+    values
+) {
+
+    const order =
+        billData?.order;
+
+
+    const restaurant =
+        billData?.restaurant ||
+        {};
+
+
+    const items =
+        billData?.items ||
+        [];
+
+
+    if (!order) {
+        return "";
+    }
+
+
+    const subtotal =
+        Number(
+            order.subtotal ||
+            0
+        );
+
+
+    const tax =
+        Number(
+            values.tax ||
+            0
+        );
+
+
+    const service =
+        Number(
+            values.service ||
+            0
+        );
+
+
+    const discount =
+        Number(
+            values.discount ||
+            0
+        );
+
+
+    const total =
+        Math.max(
+            0,
+            subtotal +
+            tax +
+            service -
+            discount
+        );
+
+
+    const line =
+        "--------------------------------";
+
+
+    let receipt =
+        "";
+
+
+    receipt +=
+        `${
+            restaurant.name ||
+            "RESTAURANT"
+        }\n`;
+
+
+    if (
+        restaurant.address
+    ) {
+
+        receipt +=
+            `${restaurant.address}\n`;
+    }
+
+
+    if (
+        restaurant.phone
+    ) {
+
+        receipt +=
+            `Phone: ${restaurant.phone}\n`;
+    }
+
+
+    if (
+        restaurant.gst_number
+    ) {
+
+        receipt +=
+            `GST: ${restaurant.gst_number}\n`;
+    }
+
+
+    receipt +=
+        `${line}\n`;
+
+
+    receipt +=
+        `Bill #${order.bill_number}\n`;
+
+
+    receipt +=
+        `${order.table_name}\n`;
+
+
+    receipt +=
+        `${
+            new Date()
+                .toLocaleDateString(
+                    "en-IN"
+                )
+        } `;
+
+
+    receipt +=
+        `${
+            new Date()
+                .toLocaleTimeString(
+                    "en-IN",
+                    {
+                        hour:
+                            "2-digit",
+
+                        minute:
+                            "2-digit"
+                    }
+                )
+        }\n`;
+
+
+    receipt +=
+        `${line}\n`;
+
+
+    receipt +=
+        `ITEM                QTY  AMT\n`;
+
+
+    receipt +=
+        `${line}\n`;
+
+
+    items.forEach(
+        item => {
+
+            const name =
+                String(
+                    item.item_name ||
+                    "Item"
+                );
+
+
+            const qty =
+                Number(
+                    item.quantity ||
+                    0
+                );
+
+
+            const amount =
+                Number(
+                    item.line_total ||
+                    0
+                );
+
+
+            // Item name
+            receipt +=
+                `${name}\n`;
+
+
+            receipt +=
+                `${qty} x ₹${
+                    Number(
+                        item.unit_price ||
+                        0
+                    ).toFixed(2)
+                }`;
+
+
+            receipt +=
+                `     ₹${amount.toFixed(2)}\n`;
+        }
+    );
+
+
+    receipt +=
+        `${line}\n`;
+
+
+    receipt +=
+        `Subtotal: ₹${subtotal.toFixed(2)}\n`;
+
+
+    if (tax > 0) {
+
+        receipt +=
+            `Tax:      ₹${tax.toFixed(2)}\n`;
+    }
+
+
+    if (service > 0) {
+
+        receipt +=
+            `Service:  ₹${service.toFixed(2)}\n`;
+    }
+
+
+    if (discount > 0) {
+
+        receipt +=
+            `Discount: -₹${discount.toFixed(2)}\n`;
+    }
+
+
+    receipt +=
+        `${line}\n`;
+
+
+    receipt +=
+        `TOTAL: ₹${total.toFixed(2)}\n`;
+
+
+    receipt +=
+        `${line}\n`;
+
+
+    receipt +=
+        `Payment: ${
+            String(
+                values.paymentMethod ||
+                "cash"
+            ).toUpperCase()
+        }\n`;
+
+
+    receipt +=
+        `${line}\n\n`;
+
+
+    receipt +=
+        `${
+            restaurant.receipt_footer ||
+            "Thank you! Visit Again."
+        }\n`;
+
+
+    receipt +=
+        "\n\n";
+
+
+    return receipt;
+}
+
+
+// ============================================================
+// PRINT USING ANDROID THERMAL PRINTER
+// ============================================================
+
+function printAndroidReceipt(
+    billData,
+    values
+) {
+
+    if (!hasAndroidPrinter()) {
+        return false;
+    }
+
+
+    const printerName =
+        getSelectedPrinter();
+
+
+    if (!printerName) {
+        return true;
+    }
+
+
+    const receiptText =
+        buildThermalReceipt(
+            billData,
+            values
+        );
+
+
+    if (!receiptText) {
+
+        showToast(
+            "Unable to prepare receipt"
+        );
+
+
+        return true;
+    }
+
+
+    try {
+
+        // Connect first
+
+        window.AndroidPrinter
+            .connectPrinter(
+                printerName
+            );
+
+
+        showToast(
+            `Connecting ${printerName}...`
+        );
+
+
+        // Bluetooth connection ki konchem time istunnam
+
+        setTimeout(
+            () => {
+
+                try {
+
+                    window.AndroidPrinter
+                        .printReceipt(
+                            receiptText
+                        );
+
+
+                    showToast(
+                        "Bill sent to printer"
+                    );
+
+
+                } catch (error) {
+
+                    console.error(
+                        "Print error:",
+                        error
+                    );
+
+
+                    showToast(
+                        "Unable to print bill"
+                    );
+                }
+
+            },
+            1500
+        );
+
+
+        return true;
+
+
+    } catch (error) {
+
+        console.error(
+            "Bluetooth printer error:",
+            error
+        );
+
+
+        showToast(
+            "Printer connection failed"
+        );
+
+
+        return true;
+    }
+}
 // ============================================================
 // PRINT RECEIPT
 // TEMP LOGO + TEMP QR
@@ -1596,7 +2159,19 @@ function printReceipt(
     if (!order) {
         return;
     }
+    // ========================================================
+// ANDROID BLUETOOTH THERMAL PRINTER
+// ========================================================
 
+if (
+    printAndroidReceipt(
+        billData,
+        values
+    )
+) {
+
+    return;
+}
 
     const subtotal =
         Number(
