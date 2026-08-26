@@ -2221,6 +2221,44 @@ textarea.form-textarea {
     }
 }
 
+@media (max-width: 768px) {
+
+    .mobile-head {
+        position: relative !important;
+        z-index: 3000 !important;
+        pointer-events: auto !important;
+    }
+
+    .mobile-head-left {
+        position: relative !important;
+        z-index: 3001 !important;
+        pointer-events: auto !important;
+    }
+
+    .mobile-menu-btn {
+        position: relative !important;
+        z-index: 3002 !important;
+
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+
+        cursor: pointer !important;
+    }
+
+    .sidebar {
+        z-index: 4000 !important;
+    }
+
+    .sidebar-overlay {
+        z-index: 3900 !important;
+        pointer-events: none;
+    }
+
+    .sidebar-overlay.show {
+        pointer-events: auto;
+    }
+}
+
     </style>
 </head>
 
