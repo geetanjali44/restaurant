@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Auth Test</title>
+</head>
+
+<body>
+
+<h2>Supabase Auth Test</h2>
+
+<input
+    id="email"
+    type="email"
+    value="owner@restaurant.com"
+    placeholder="Email"
+>
+
+<br><br>
+
+<input
+    id="password"
+    type="password"
+    placeholder="Password"
+>
+
+<br><br>
+
+<button onclick="testLogin()">
+    TEST LOGIN
+</button>
+
+<pre id="result"></pre>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const SUPABASE_URL =
+    "https://ovrxvvmywpoakjlsiuni.supabase.co";
+
+const SUPABASE_KEY =
+    "sb_publishable_fvYspXM_RqfedMUaPYskog_oZj8UwEM";
+
+
+const client =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
+
+
+async function testLogin() {
+
+    const email =
+        document
+            .getElementById("email")
+            .value
+            .trim();
+
+    const password =
+        document
+            .getElementById("password")
+            .value;
+
+
+    const result =
+        document.getElementById("result");
+
+
+    result.textContent =
+        "Testing...";
+
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await client.auth
+                .signInWithPassword({
+                    email,
+                    password
+                });
+
+
+        if (error) {
+
+            console.error(error);
+
+            result.textContent =
+                "LOGIN FAILED\n\n" +
+                "Message: " +
+                error.message +
+                "\n\nStatus: " +
+                error.status +
+                "\n\nCode: " +
+                (error.code || "none");
+
+            return;
+        }
+
+
+        result.textContent =
+            "LOGIN SUCCESS\n\n" +
+            "Email: " +
+            data.user.email +
+            "\n\nUser ID: " +
+            data.user.id;
+
+
+        console.log(
+            "LOGIN SUCCESS:",
+            data
+        );
+
+
+    } catch (err) {
+
+        console.error(err);
+
+        result.textContent =
+            "ERROR\n\n" +
+            err.message;
+    }
+}
+
+</script>
+
+</body>
+</html>

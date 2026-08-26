@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Restaurant POS Login</title>
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #111827;
+            --primary-light: #1f2937;
+            --text: #111827;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --background: #f7f7f8;
+            --white: #ffffff;
+            --danger: #dc2626;
+            --success: #15803d;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background: var(--background);
+            min-height: 100vh;
+            color: var(--text);
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        .page {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        /* LEFT */
+
+        .brand-panel {
+            background: #111827;
+            padding: 60px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brand-panel::before {
+            content: "";
+            position: absolute;
+            width: 380px;
+            height: 380px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            right: -140px;
+            top: -100px;
+        }
+
+        .brand-panel::after {
+            content: "";
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.08);
+            left: -120px;
+            bottom: -130px;
+        }
+
+        .brand {
+            position: relative;
+            z-index: 2;
+        }
+
+        .brand-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .logo-box {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: white;
+            color: #111827;
+            display: grid;
+            place-items: center;
+            font-weight: 800;
+        }
+
+        .hero {
+            position: relative;
+            z-index: 2;
+            max-width: 520px;
+        }
+
+        .hero h1 {
+            font-size: clamp(36px, 5vw, 64px);
+            line-height: 1.05;
+            letter-spacing: -2px;
+            margin-bottom: 20px;
+        }
+
+        .hero p {
+            max-width: 450px;
+            font-size: 17px;
+            line-height: 1.7;
+            color: #cbd5e1;
+        }
+
+        .features {
+            margin-top: 40px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .feature {
+            padding: 10px 14px;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 999px;
+            color: #d1d5db;
+            font-size: 13px;
+        }
+
+        .footer-text {
+            color: #9ca3af;
+            font-size: 13px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* RIGHT */
+
+        .login-panel {
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: white;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 430px;
+        }
+
+        .mobile-logo {
+            display: none;
+            margin-bottom: 40px;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 20px;
+        }
+
+        .mobile-logo .logo-box {
+            background: #111827;
+            color: white;
+        }
+
+        .login-header {
+            margin-bottom: 35px;
+        }
+
+        .login-header h2 {
+            font-size: 32px;
+            letter-spacing: -1px;
+            margin-bottom: 9px;
+        }
+
+        .login-header p {
+            color: var(--muted);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .field {
+            margin-bottom: 20px;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-wrap input {
+            width: 100%;
+            height: 54px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: white;
+            padding: 0 16px;
+            padding-right: 52px;
+            outline: none;
+            font-size: 15px;
+            transition: 0.2s ease;
+        }
+
+        .input-wrap input:focus {
+            border-color: #111827;
+            box-shadow: 0 0 0 3px rgba(17,24,39,0.06);
+        }
+
+        .password-toggle {
+            border: 0;
+            background: none;
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #6b7280;
+            padding: 7px;
+            font-size: 13px;
+        }
+
+        .login-btn {
+            width: 100%;
+            height: 54px;
+            margin-top: 8px;
+            border: 0;
+            border-radius: 12px;
+            background: #111827;
+            color: white;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .login-btn:hover {
+            background: #1f2937;
+        }
+
+        .login-btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.35);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+            display: none;
+        }
+
+        .login-btn.loading .spinner {
+            display: block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .message {
+            margin-top: 18px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            line-height: 1.5;
+            display: none;
+        }
+
+        .message.error {
+            display: block;
+            color: #991b1b;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+        }
+
+        .message.success {
+            display: block;
+            color: #166534;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+        }
+
+        .secure-text {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 12px;
+            margin-top: 28px;
+        }
+
+        /* INITIAL SESSION LOADER */
+
+        .session-loader {
+            position: fixed;
+            inset: 0;
+            background: white;
+            z-index: 999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.25s ease;
+        }
+
+        .session-loader.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .session-loader-inner {
+            text-align: center;
+        }
+
+        .session-spinner {
+            width: 34px;
+            height: 34px;
+            margin: 0 auto 15px;
+            border-radius: 50%;
+            border: 3px solid #e5e7eb;
+            border-top-color: #111827;
+            animation: spin .7s linear infinite;
+        }
+
+        .session-loader p {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        @media (max-width: 850px) {
+
+            .page {
+                display: block;
+            }
+
+            .brand-panel {
+                display: none;
+            }
+
+            .login-panel {
+                min-height: 100vh;
+                padding: 28px 22px;
+            }
+
+            .mobile-logo {
+                display: flex;
+            }
+
+            .login-header h2 {
+                font-size: 28px;
+            }
+
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <!-- Session check loader -->
+    <div class="session-loader" id="sessionLoader">
+
+        <div class="session-loader-inner">
+
+            <div class="session-spinner"></div>
+
+            <p>Checking account...</p>
+
+        </div>
+
+    </div>
+
+
+    <main class="page">
+
+        <!-- LEFT SIDE -->
+
+        <section class="brand-panel">
+
+            <div class="brand">
+
+                <div class="brand-logo">
+
+                    <div class="logo-box">
+                        R
+                    </div>
+
+                    Restaurant POS
+
+                </div>
+
+            </div>
+
+
+            <div class="hero">
+
+                <h1>
+                    Restaurant
+                    operations,
+                    simplified.
+                </h1>
+
+                <p>
+                    Manage tables, orders, menu, billing,
+                    staff and restaurant sales from one
+                    live system.
+                </p>
+
+                <div class="features">
+
+                    <span class="feature">
+                        Live Orders
+                    </span>
+
+                    <span class="feature">
+                        Table Management
+                    </span>
+
+                    <span class="feature">
+                        Billing
+                    </span>
+
+                    <span class="feature">
+                        Staff Access
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="footer-text">
+                Secure restaurant management system
+            </div>
+
+        </section>
+
+
+        <!-- LOGIN -->
+
+        <section class="login-panel">
+
+            <div class="login-container">
+
+
+                <div class="mobile-logo">
+
+                    <div class="logo-box">
+                        R
+                    </div>
+
+                    Restaurant POS
+
+                </div>
+
+
+                <div class="login-header">
+
+                    <h2>
+                        Welcome back
+                    </h2>
+
+                    <p>
+                        Sign in using your restaurant
+                        account to continue.
+                    </p>
+
+                </div>
+
+
+                <form id="loginForm">
+
+                    <div class="field">
+
+                        <label for="email">
+                            Email address
+                        </label>
+
+                        <div class="input-wrap">
+
+                            <input
+                                type="email"
+                                id="email"
+                                placeholder="owner@restaurant.com"
+                                autocomplete="email"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="password">
+                            Password
+                        </label>
+
+                        <div class="input-wrap">
+
+                            <input
+                                type="password"
+                                id="password"
+                                placeholder="Enter your password"
+                                autocomplete="current-password"
+                                required
+                            >
+
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                id="passwordToggle"
+                            >
+                                Show
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="login-btn"
+                        id="loginBtn"
+                    >
+
+                        <span
+                            class="spinner"
+                            id="loginSpinner"
+                        ></span>
+
+                        <span id="loginBtnText">
+                            Sign In
+                        </span>
+
+                    </button>
+
+
+                    <div
+                        class="message"
+                        id="message"
+                    ></div>
+
+                </form>
+
+
+                <div class="secure-text">
+                    Authorized restaurant staff only
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- Supabase JS v2 -->
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+    ></script>
+
+    <script src="script.js"></script>
+
+</body>
+</html>

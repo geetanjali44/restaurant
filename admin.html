@@ -1,0 +1,3201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Restaurant Admin</title>
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f6f7f9;
+            --card: #ffffff;
+            --text: #111827;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --dark: #111827;
+
+            --green: #15803d;
+            --green-bg: #f0fdf4;
+
+            --blue: #2563eb;
+            --blue-bg: #eff6ff;
+
+            --orange: #c2410c;
+            --orange-bg: #fff7ed;
+
+            --red: #dc2626;
+            --red-bg: #fef2f2;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        button,
+        input {
+            font-family: inherit;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 235px 1fr;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+
+        .sidebar {
+            background: var(--dark);
+            color: white;
+            padding: 22px 15px;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .brand {
+            padding: 4px 10px 28px;
+        }
+
+        .brand-title {
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+        .brand-sub {
+            color: #9ca3af;
+            font-size: 11px;
+            margin-top: 5px;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .nav button {
+            border: 0;
+            color: #9ca3af;
+            background: transparent;
+            padding: 12px 13px;
+            text-align: left;
+            border-radius: 9px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .nav button:hover {
+            color: white;
+            background: rgba(255,255,255,.06);
+        }
+
+        .nav button.active {
+            background: white;
+            color: #111827;
+            font-weight: 700;
+        }
+
+        .sidebar-user {
+            margin-top: auto;
+            border-top: 1px solid rgba(255,255,255,.1);
+            padding: 17px 8px 5px;
+        }
+
+        .sidebar-user strong {
+            display: block;
+            font-size: 13px;
+        }
+
+        .sidebar-user span {
+            display: block;
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+
+        .logout {
+            width: 100%;
+            margin-top: 12px;
+            border: 0;
+            background: rgba(255,255,255,.08);
+            color: white;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* MAIN */
+
+        .main {
+            min-width: 0;
+            padding: 28px;
+        }
+
+        .mobile-head {
+            display: none;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .top h1 {
+            font-size: 26px;
+            letter-spacing: -.7px;
+        }
+
+        .top p {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        .live {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 11px;
+            background: var(--green-bg);
+            color: var(--green);
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--green);
+        }
+
+        /* STATS */
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(5,1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 17px;
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 25px;
+            font-weight: 800;
+            margin-top: 8px;
+            letter-spacing: -.8px;
+        }
+
+        /* PANELS */
+
+        .content {
+            display: grid;
+            grid-template-columns: minmax(0,1.5fr) minmax(280px,.7fr);
+            gap: 15px;
+        }
+
+        .panel {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .panel-head {
+            padding: 17px 18px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .panel-head h2 {
+            font-size: 15px;
+        }
+
+        .panel-head p {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .panel-body {
+            padding: 16px;
+        }
+
+        .add-table-btn {
+            border: 0;
+            background: #111827;
+            color: white;
+            padding: 9px 12px;
+            border-radius: 9px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* TABLES */
+
+        .tables {
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 11px;
+        }
+
+        .table-card {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            min-height: 130px;
+            background: white;
+            transition: .15s;
+        }
+
+        .table-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(0,0,0,.05);
+        }
+
+        .table-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 7px;
+        }
+
+        .table-name {
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .status {
+            font-size: 9px;
+            padding: 5px 7px;
+            border-radius: 999px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .free {
+            color: var(--green);
+            background: var(--green-bg);
+        }
+
+        .occupied,
+        .ordering,
+        .running {
+            color: var(--blue);
+            background: var(--blue-bg);
+        }
+
+        .bill_requested,
+        .billing {
+            color: var(--orange);
+            background: var(--orange-bg);
+        }
+
+        .paid {
+            color: #374151;
+            background: #f3f4f6;
+        }
+
+        .cleaning {
+            color: #7e22ce;
+            background: #faf5ff;
+        }
+
+        .table-total {
+            margin-top: 18px;
+            font-weight: 800;
+            font-size: 18px;
+        }
+
+        .table-meta {
+            margin-top: 5px;
+            font-size: 10px;
+            color: var(--muted);
+        }
+
+        .table-actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 6px;
+        }
+
+        .table-actions button {
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 7px;
+            padding: 6px 8px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .table-actions .disable-table {
+            color: var(--red);
+        }
+
+        /* ORDERS */
+
+        .orders {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .order {
+            padding: 13px 2px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .order:last-child {
+            border-bottom: 0;
+        }
+
+        .order-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .order-bill {
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .order-price {
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .order-bottom {
+            margin-top: 6px;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            color: var(--muted);
+            font-size: 10px;
+        }
+
+        /* PLACEHOLDER SECTIONS */
+
+        .empty-section {
+            min-height: 420px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .empty-section-inner {
+            max-width: 420px;
+        }
+
+        .empty-section h2 {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        .empty-section p {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 35px 10px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        /* MODAL */
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(17,24,39,.45);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-box {
+            width: 100%;
+            max-width: 420px;
+            background: white;
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 20px 50px rgba(0,0,0,.15);
+        }
+
+        .modal-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-head h3 {
+            font-size: 18px;
+        }
+
+        .close-btn {
+            border: 0;
+            background: #f3f4f6;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 17px;
+        }
+
+        .form-field {
+            margin-bottom: 15px;
+        }
+
+        .form-field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 7px;
+        }
+
+        .form-field input {
+            width: 100%;
+            height: 46px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0 12px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .form-field input:focus {
+            border-color: #111827;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 9px;
+            margin-top: 20px;
+        }
+
+        .modal-actions button {
+            flex: 1;
+            border: 0;
+            height: 44px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .cancel-btn {
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        .save-btn {
+            background: #111827;
+            color: white;
+        }
+
+        .save-btn:disabled {
+            opacity: .6;
+        }
+
+        /* TOAST */
+
+        .toast {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            background: #111827;
+            color: white;
+            border-radius: 10px;
+            padding: 12px 15px;
+            font-size: 12px;
+            z-index: 1200;
+            transform: translateY(80px);
+            opacity: 0;
+            transition: .25s;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* LOADER */
+
+        .loader {
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spinner {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 3px solid #e5e7eb;
+            border-top-color: #111827;
+            animation: spin .7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media(max-width:1100px) {
+
+            .stats {
+                grid-template-columns: repeat(2,1fr);
+            }
+
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .tables {
+                grid-template-columns: repeat(3,1fr);
+            }
+        }
+
+        @media(max-width:760px) {
+
+            .layout {
+                display: block;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .main {
+                padding: 17px;
+            }
+
+            .mobile-head {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 20px;
+            }
+
+            .mobile-head strong {
+                font-size: 16px;
+            }
+
+            .mobile-head button {
+                border: 1px solid var(--border);
+                background: white;
+                padding: 8px 11px;
+                border-radius: 8px;
+            }
+
+            .tables {
+                grid-template-columns: repeat(2,1fr);
+            }
+
+            .top h1 {
+                font-size: 23px;
+            }
+        }
+
+        .menu-top-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.secondary-action-btn {
+    border: 1px solid var(--border);
+    background: white;
+    color: #111827;
+    padding: 9px 12px;
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.category-bar {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 12px;
+    scrollbar-width: none;
+}
+
+.category-bar::-webkit-scrollbar {
+    display: none;
+}
+
+.category-chip {
+    border: 1px solid var(--border);
+    background: white;
+    color: #374151;
+    border-radius: 999px;
+    padding: 8px 13px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.category-chip.active {
+    background: #111827;
+    border-color: #111827;
+    color: white;
+}
+
+.menu-search-wrap {
+    margin-bottom: 15px;
+}
+
+.menu-search {
+    width: 100%;
+    max-width: 420px;
+    height: 43px;
+    border: 1px solid var(--border);
+    background: white;
+    border-radius: 10px;
+    padding: 0 13px;
+    outline: none;
+}
+
+.menu-search:focus {
+    border-color: #111827;
+}
+
+.menu-items-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.menu-item-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    overflow: hidden;
+}
+
+.menu-item-image {
+    height: 120px;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    font-size: 11px;
+}
+
+.menu-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.menu-item-body {
+    padding: 13px;
+}
+
+.menu-category {
+    color: #6b7280;
+    font-size: 10px;
+    margin-bottom: 5px;
+}
+
+.menu-item-name {
+    font-weight: 800;
+    font-size: 14px;
+}
+
+.menu-item-description {
+    color: #6b7280;
+    font-size: 10px;
+    margin-top: 5px;
+    min-height: 15px;
+}
+
+.menu-item-price {
+    font-size: 17px;
+    font-weight: 800;
+    margin-top: 12px;
+}
+
+.menu-item-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 13px;
+}
+
+.food-type {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.food-type.veg {
+    color: #15803d;
+}
+
+.food-type.non_veg {
+    color: #dc2626;
+}
+
+.food-type.egg {
+    color: #ca8a04;
+}
+
+.item-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.item-actions button {
+    border: 1px solid var(--border);
+    background: white;
+    border-radius: 7px;
+    padding: 6px 7px;
+    font-size: 9px;
+    cursor: pointer;
+}
+
+.item-actions .stock-off {
+    color: #dc2626;
+}
+
+.item-actions .stock-on {
+    color: #15803d;
+}
+
+.menu-item-card.out-of-stock {
+    opacity: .58;
+}
+
+.stock-text {
+    margin-top: 8px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.stock-text.available {
+    color: #15803d;
+}
+
+.stock-text.unavailable {
+    color: #dc2626;
+}
+
+select.form-select,
+textarea.form-textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    outline: none;
+    font-family: inherit;
+}
+
+select.form-select {
+    height: 46px;
+    padding: 0 11px;
+    background: white;
+}
+
+textarea.form-textarea {
+    padding: 11px;
+    resize: vertical;
+    min-height: 80px;
+}
+
+@media(max-width:1100px) {
+    .menu-items-grid {
+        grid-template-columns: repeat(3,1fr);
+    }
+}
+
+@media(max-width:760px) {
+    .menu-items-grid {
+        grid-template-columns: repeat(2,1fr);
+    }
+
+    .menu-top-actions {
+        flex-direction: column;
+    }
+}
+
+.staff-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.staff-card {
+    border: 1px solid var(--border);
+    background: white;
+    border-radius: 13px;
+    padding: 15px;
+}
+
+.staff-card.disabled {
+    opacity: .55;
+}
+
+.staff-name {
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.staff-role {
+    display: inline-block;
+    margin-top: 7px;
+    padding: 5px 8px;
+    background: #f3f4f6;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.staff-email {
+    margin-top: 12px;
+    color: #4b5563;
+    font-size: 11px;
+    word-break: break-all;
+}
+
+.staff-phone {
+    margin-top: 5px;
+    color: #6b7280;
+    font-size: 10px;
+}
+
+.staff-status {
+    margin-top: 9px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.staff-status.active {
+    color: #15803d;
+}
+
+.staff-status.inactive {
+    color: #dc2626;
+}
+
+.staff-actions {
+    margin-top: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.staff-actions button {
+    border: 1px solid var(--border);
+    background: white;
+    border-radius: 7px;
+    padding: 6px 8px;
+    font-size: 9px;
+    cursor: pointer;
+}
+
+.staff-actions .disable-staff {
+    color: #dc2626;
+}
+
+.staff-actions .enable-staff {
+    color: #15803d;
+}
+
+@media(max-width:1100px) {
+    .staff-grid {
+        grid-template-columns: repeat(2,1fr);
+    }
+}
+
+@media(max-width:760px) {
+    .staff-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+.orders-toolbar {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    margin-bottom: 15px;
+    padding-bottom: 4px;
+}
+
+.order-filter {
+    border: 1px solid var(--border);
+    background: white;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.order-filter.active {
+    background: #111827;
+    border-color: #111827;
+    color: white;
+}
+
+.admin-orders-grid {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 12px;
+}
+
+.admin-order-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    padding: 14px;
+    cursor: pointer;
+}
+
+.admin-order-card:hover {
+    box-shadow: 0 8px 22px rgba(0,0,0,.05);
+}
+
+.admin-order-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.admin-order-bill {
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.admin-order-total {
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.admin-order-table {
+    margin-top: 8px;
+    font-size: 11px;
+    color: #4b5563;
+}
+
+.admin-order-status {
+    margin-top: 10px;
+    display: inline-block;
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: #f3f4f6;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.admin-order-time {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 9px;
+}
+
+.order-detail-items {
+    margin-top: 15px;
+}
+
+.order-detail-item {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.order-detail-item-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.order-detail-item-name {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.order-detail-item-price {
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.order-detail-item-meta {
+    margin-top: 5px;
+    font-size: 9px;
+    color: var(--muted);
+}
+
+.cancelled-order-item {
+    opacity: .45;
+    text-decoration: line-through;
+}
+
+.order-detail-summary {
+    margin-top: 15px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+}
+
+.order-summary-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 7px;
+    font-size: 11px;
+}
+
+.order-summary-row.total {
+    font-size: 15px;
+    font-weight: 800;
+    margin-top: 10px;
+}
+
+.order-status-select {
+    width: 100%;
+    height: 42px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 0 10px;
+    background: white;
+    margin-top: 15px;
+}
+
+.cancel-item-btn {
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: #dc2626;
+    border-radius: 7px;
+    padding: 5px 7px;
+    font-size: 9px;
+    cursor: pointer;
+    margin-top: 7px;
+}
+
+@media(max-width:1100px) {
+    .admin-orders-grid {
+        grid-template-columns: repeat(2,1fr);
+    }
+}
+
+@media(max-width:760px) {
+    .admin-orders-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.billing-grid {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 12px;
+}
+
+.billing-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    cursor: pointer;
+}
+
+.billing-card:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,.05);
+}
+
+.billing-card-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.billing-card-table {
+    font-weight: 800;
+    font-size: 14px;
+}
+
+.billing-card-total {
+    font-weight: 800;
+    font-size: 18px;
+}
+
+.billing-card-bill {
+    color: var(--muted);
+    font-size: 10px;
+    margin-top: 7px;
+}
+
+.billing-card-status {
+    display: inline-block;
+    margin-top: 11px;
+    padding: 5px 8px;
+    background: var(--orange-bg);
+    color: var(--orange);
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.bill-items {
+    margin-bottom: 16px;
+}
+
+.bill-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+}
+
+.bill-edit-grid {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.bill-edit-grid label {
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.bill-edit-grid input {
+    width: 100%;
+    height: 39px;
+    margin-top: 6px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0 9px;
+}
+
+.bill-summary {
+    margin-top: 16px;
+    border-top: 1px solid var(--border);
+    padding-top: 13px;
+}
+
+.bill-summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 7px;
+    font-size: 11px;
+}
+
+.bill-summary-row.grand {
+    font-size: 17px;
+    font-weight: 800;
+    margin-top: 12px;
+}
+
+.payment-methods {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 7px;
+    margin-top: 15px;
+}
+
+.payment-method {
+    border: 1px solid var(--border);
+    background: white;
+    border-radius: 9px;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.payment-method.active {
+    background: #111827;
+    color: white;
+    border-color: #111827;
+}
+
+.reference-input {
+    width: 100%;
+    height: 42px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 0 10px;
+    margin-top: 10px;
+    display: none;
+}
+
+.billing-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.billing-actions button {
+    height: 43px;
+    border-radius: 9px;
+    cursor: pointer;
+    font-weight: 700;
+    border: 0;
+}
+
+.reopen-btn {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+.update-bill-btn {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.pay-btn {
+    grid-column: 1/-1;
+    background: #111827;
+    color: white;
+}
+
+@media(max-width:1100px) {
+    .billing-grid {
+        grid-template-columns: repeat(2,1fr);
+    }
+}
+
+@media(max-width:760px) {
+    .billing-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .bill-edit-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.report-filter {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.report-filter label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.report-filter input {
+    height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 0 10px;
+    background: white;
+}
+
+.report-stats {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.report-panel {
+    margin-bottom: 15px;
+}
+
+.payment-report-grid {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 10px;
+    padding: 15px;
+}
+
+.payment-report-card {
+    padding: 14px;
+    background: #f9fafb;
+    border-radius: 10px;
+}
+
+.payment-report-card span {
+    display: block;
+    font-size: 10px;
+    color: var(--muted);
+}
+
+.payment-report-card strong {
+    display: block;
+    margin-top: 6px;
+    font-size: 16px;
+}
+
+.reports-two-column {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.report-list {
+    padding: 15px;
+}
+
+.report-list-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.report-list-row:last-child {
+    border-bottom: 0;
+}
+
+.report-list-main {
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.report-list-sub {
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 4px;
+}
+
+.report-list-value {
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.history-table-wrap {
+    overflow-x: auto;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.history-table th,
+.history-table td {
+    text-align: left;
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--border);
+    font-size: 10px;
+}
+
+.history-table th {
+    color: var(--muted);
+    font-size: 9px;
+    text-transform: uppercase;
+}
+
+@media(max-width:900px) {
+
+    .report-stats {
+        grid-template-columns: repeat(2,1fr);
+    }
+
+    .payment-report-grid {
+        grid-template-columns: repeat(2,1fr);
+    }
+
+    .reports-two-column {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media(max-width:600px) {
+
+    .report-filter {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .report-filter button {
+        grid-column: 1/-1;
+    }
+
+    .report-filter input {
+        width: 100%;
+    }
+}
+
+    </style>
+</head>
+
+<body>
+
+<div class="loader" id="loader">
+    <div class="spinner"></div>
+</div>
+
+<div class="layout">
+
+    <aside class="sidebar">
+
+        <div class="brand">
+
+            <div
+                class="brand-title"
+                id="restaurantName"
+            >
+                Restaurant
+            </div>
+
+            <div class="brand-sub">
+                Management System
+            </div>
+
+        </div>
+
+        <nav class="nav">
+
+            <button
+                class="active"
+                data-section="overview"
+            >
+                Overview
+            </button>
+
+            <button
+                data-section="tables"
+            >
+                Tables
+            </button>
+
+            <button
+                data-section="orders"
+            >
+                Orders
+            </button>
+
+            <button
+                data-section="menu"
+            >
+                Menu
+            </button>
+
+            <button
+                data-section="billing"
+            >
+                Billing
+            </button>
+
+            <button
+                data-section="staff"
+            >
+                Staff
+            </button>
+
+            <button
+                data-section="reports"
+            >
+                Reports
+            </button>
+
+        </nav>
+
+        <div class="sidebar-user">
+
+            <strong id="userName">
+                Owner
+            </strong>
+
+            <span id="userRole">
+                owner
+            </span>
+
+            <button
+                class="logout"
+                id="logoutBtn"
+            >
+                Sign Out
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <main class="main">
+
+        <div class="mobile-head">
+
+            <strong id="mobileRestaurantName">
+                Restaurant
+            </strong>
+
+            <button id="mobileLogoutBtn">
+                Logout
+            </button>
+
+        </div>
+
+
+        <!-- OVERVIEW -->
+
+        <section
+            class="section active"
+            id="section-overview"
+        >
+
+            <header class="top">
+
+                <div>
+                    <h1>
+                        Business Overview
+                    </h1>
+
+                    <p id="welcomeText">
+                        Loading...
+                    </p>
+                </div>
+
+                <div class="live">
+                    <span class="live-dot"></span>
+                    Live
+                </div>
+
+            </header>
+
+
+            <section class="stats">
+
+                <div class="stat">
+                    <div class="stat-label">
+                        Today's Sales
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        id="todaySales"
+                    >
+                        ₹0
+                    </div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-label">
+                        Active Orders
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        id="activeOrders"
+                    >
+                        0
+                    </div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-label">
+                        Free Tables
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        id="freeTables"
+                    >
+                        0
+                    </div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-label">
+                        Occupied Tables
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        id="occupiedTables"
+                    >
+                        0
+                    </div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-label">
+                        Bill Requested
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        id="billRequested"
+                    >
+                        0
+                    </div>
+                </div>
+
+            </section>
+
+
+            <section class="content">
+
+                <div class="panel">
+
+                    <div class="panel-head">
+
+                        <div>
+                            <h2>
+                                Restaurant Tables
+                            </h2>
+
+                            <p>
+                                Current table status
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <div class="panel-body">
+
+                        <div
+                            class="tables"
+                            id="overviewTablesGrid"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="panel">
+
+                    <div class="panel-head">
+
+                        <div>
+                            <h2>
+                                Recent Orders
+                            </h2>
+
+                            <p>
+                                Latest activity
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <div class="panel-body">
+
+                        <div
+                            class="orders"
+                            id="recentOrders"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </section>
+
+
+        <!-- TABLES -->
+
+        <section
+            class="section"
+            id="section-tables"
+        >
+
+            <header class="top">
+
+                <div>
+                    <h1>
+                        Tables
+                    </h1>
+
+                    <p>
+                        Add and manage restaurant tables.
+                    </p>
+                </div>
+
+                <button
+                    class="add-table-btn"
+                    id="addTableBtn"
+                >
+                    + Add Table
+                </button>
+
+            </header>
+
+
+            <div class="panel">
+
+                <div class="panel-head">
+
+                    <div>
+                        <h2>
+                            All Tables
+                        </h2>
+
+                        <p>
+                            Edit or disable free tables
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="panel-body">
+
+                    <div
+                        class="tables"
+                        id="tablesGrid"
+                    ></div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ORDERS -->
+
+        <section
+    class="section"
+    id="section-orders"
+>
+
+    <header class="top">
+
+        <div>
+            <h1>Orders</h1>
+
+            <p>
+                Manage active, completed and cancelled orders.
+            </p>
+        </div>
+
+    </header>
+
+
+    <div class="orders-toolbar">
+
+        <button
+            class="order-filter active"
+            data-order-filter="all"
+        >
+            All
+        </button>
+
+        <button
+            class="order-filter"
+            data-order-filter="active"
+        >
+            Active
+        </button>
+
+        <button
+            class="order-filter"
+            data-order-filter="bill_requested"
+        >
+            Bill Requested
+        </button>
+
+        <button
+            class="order-filter"
+            data-order-filter="paid"
+        >
+            Paid
+        </button>
+
+        <button
+            class="order-filter"
+            data-order-filter="cancelled"
+        >
+            Cancelled
+        </button>
+
+    </div>
+
+
+    <div
+        class="admin-orders-grid"
+        id="adminOrdersGrid"
+    ></div>
+
+</section>
+
+
+        <!-- MENU -->
+
+        <section
+    class="section"
+    id="section-menu"
+>
+
+    <header class="top">
+
+        <div>
+            <h1>Menu</h1>
+
+            <p>
+                Categories, items, prices and availability.
+            </p>
+        </div>
+
+
+        <div class="menu-top-actions">
+
+            <button
+                class="secondary-action-btn"
+                id="addCategoryBtn"
+            >
+                + Category
+            </button>
+
+            <button
+                class="add-table-btn"
+                id="addMenuItemBtn"
+            >
+                + Add Item
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- CATEGORY CHIPS -->
+
+    <div
+        class="category-bar"
+        id="categoryBar"
+    >
+        <button
+            class="category-chip active"
+            data-category=""
+        >
+            All
+        </button>
+    </div>
+
+
+    <!-- SEARCH -->
+
+    <div class="menu-search-wrap">
+
+        <input
+            type="search"
+            id="menuSearch"
+            class="menu-search"
+            placeholder="Search menu items..."
+        >
+
+    </div>
+
+
+    <!-- ITEMS -->
+
+    <div
+        class="menu-items-grid"
+        id="menuItemsGrid"
+    ></div>
+
+</section>
+        <!-- BILLING -->
+
+        <section
+    class="section"
+    id="section-billing"
+>
+
+    <header class="top">
+
+        <div>
+            <h1>Billing</h1>
+
+            <p>
+                Bill requests, payment and receipt printing.
+            </p>
+        </div>
+
+    </header>
+
+
+    <div
+        class="billing-grid"
+        id="billingGrid"
+    ></div>
+
+</section>
+
+
+        <!-- STAFF -->
+
+        <section
+    class="section"
+    id="section-staff"
+>
+
+    <header class="top">
+
+        <div>
+            <h1>Staff</h1>
+
+            <p>
+                Create and manage restaurant staff accounts.
+            </p>
+        </div>
+
+
+        <button
+            class="add-table-btn"
+            id="addStaffBtn"
+        >
+            + Add Staff
+        </button>
+
+    </header>
+
+
+    <div class="panel">
+
+        <div class="panel-head">
+
+            <div>
+                <h2>Staff Accounts</h2>
+
+                <p>
+                    Admin, waiter, cashier and kitchen access.
+                </p>
+            </div>
+
+        </div>
+
+
+        <div class="panel-body">
+
+            <div
+                class="staff-grid"
+                id="staffGrid"
+            ></div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+        <!-- REPORTS -->
+
+        <section
+    class="section"
+    id="section-reports"
+>
+
+    <header class="top">
+
+        <div>
+            <h1>Reports</h1>
+
+            <p>
+                Sales, payments, items and waiter performance.
+            </p>
+        </div>
+
+    </header>
+
+
+    <!-- DATE FILTER -->
+
+    <div class="report-filter">
+
+        <div>
+            <label>From</label>
+
+            <input
+                type="date"
+                id="reportFromDate"
+            >
+        </div>
+
+
+        <div>
+            <label>To</label>
+
+            <input
+                type="date"
+                id="reportToDate"
+            >
+        </div>
+
+
+        <button
+            id="applyReportFilter"
+            class="add-table-btn"
+        >
+            Apply
+        </button>
+
+    </div>
+
+
+    <!-- SUMMARY -->
+
+    <div class="report-stats">
+
+        <div class="stat">
+            <div class="stat-label">
+                Sales
+            </div>
+
+            <div
+                class="stat-value"
+                id="reportSales"
+            >
+                ₹0
+            </div>
+        </div>
+
+
+        <div class="stat">
+            <div class="stat-label">
+                Paid Orders
+            </div>
+
+            <div
+                class="stat-value"
+                id="reportPaidOrders"
+            >
+                0
+            </div>
+        </div>
+
+
+        <div class="stat">
+            <div class="stat-label">
+                Cancelled
+            </div>
+
+            <div
+                class="stat-value"
+                id="reportCancelled"
+            >
+                0
+            </div>
+        </div>
+
+
+        <div class="stat">
+            <div class="stat-label">
+                Average Bill
+            </div>
+
+            <div
+                class="stat-value"
+                id="reportAverage"
+            >
+                ₹0
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- PAYMENT METHODS -->
+
+    <div class="panel report-panel">
+
+        <div class="panel-head">
+            <div>
+                <h2>Payments</h2>
+                <p>Payment method split</p>
+            </div>
+        </div>
+
+
+        <div class="payment-report-grid">
+
+            <div class="payment-report-card">
+                <span>Cash</span>
+                <strong id="reportCash">₹0</strong>
+            </div>
+
+            <div class="payment-report-card">
+                <span>UPI</span>
+                <strong id="reportUpi">₹0</strong>
+            </div>
+
+            <div class="payment-report-card">
+                <span>Card</span>
+                <strong id="reportCard">₹0</strong>
+            </div>
+
+            <div class="payment-report-card">
+                <span>Other</span>
+                <strong id="reportOther">₹0</strong>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="reports-two-column">
+
+        <!-- TOP ITEMS -->
+
+        <div class="panel">
+
+            <div class="panel-head">
+                <div>
+                    <h2>Top Selling Items</h2>
+                    <p>Highest quantity sold</p>
+                </div>
+            </div>
+
+            <div
+                class="report-list"
+                id="topItemsList"
+            ></div>
+
+        </div>
+
+
+        <!-- WAITER -->
+
+        <div class="panel">
+
+            <div class="panel-head">
+                <div>
+                    <h2>Waiter Performance</h2>
+                    <p>Orders and sales</p>
+                </div>
+            </div>
+
+            <div
+                class="report-list"
+                id="waiterReportList"
+            ></div>
+
+        </div>
+
+    </div>
+
+
+    <!-- HISTORY -->
+
+    <div
+        class="panel"
+        style="margin-top:15px;"
+    >
+
+        <div class="panel-head">
+
+            <div>
+                <h2>Completed Bills</h2>
+                <p>Paid order history</p>
+            </div>
+
+        </div>
+
+
+        <div
+            class="history-table-wrap"
+        >
+
+            <table class="history-table">
+
+                <thead>
+                    <tr>
+                        <th>Bill</th>
+                        <th>Table</th>
+                        <th>Waiter</th>
+                        <th>Payment</th>
+                        <th>Total</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+
+                <tbody id="orderHistoryBody">
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</section>
+
+    </main>
+
+</div>
+
+
+<!-- TABLE MODAL -->
+
+<div
+    class="modal"
+    id="tableModal"
+>
+
+    <div class="modal-box">
+
+        <div class="modal-head">
+
+            <h3 id="tableModalTitle">
+                Add Table
+            </h3>
+
+            <button
+                class="close-btn"
+                id="closeTableModal"
+                type="button"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="tableForm">
+
+            <input
+                type="hidden"
+                id="editingTableId"
+            >
+
+
+            <div class="form-field">
+
+                <label>
+                    Table Name
+                </label>
+
+                <input
+                    id="tableNameInput"
+                    type="text"
+                    placeholder="Example: Table 1"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label>
+                    Table Number
+                </label>
+
+                <input
+                    id="tableNumberInput"
+                    type="number"
+                    min="1"
+                    placeholder="1"
+                >
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label>
+                    Capacity
+                </label>
+
+                <input
+                    id="tableCapacityInput"
+                    type="number"
+                    min="1"
+                    value="4"
+                    required
+                >
+
+            </div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="cancel-btn"
+                    id="cancelTableBtn"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="save-btn"
+                    id="saveTableBtn"
+                >
+                    Save Table
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<div
+    class="toast"
+    id="toast"
+></div>
+
+<!-- CATEGORY MODAL -->
+
+<div
+    class="modal"
+    id="categoryModal"
+>
+
+    <div class="modal-box">
+
+        <div class="modal-head">
+
+            <h3 id="categoryModalTitle">
+                Add Category
+            </h3>
+
+            <button
+                type="button"
+                class="close-btn"
+                id="closeCategoryModal"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="categoryForm">
+
+            <input
+                type="hidden"
+                id="editingCategoryId"
+            >
+
+
+            <div class="form-field">
+
+                <label>
+                    Category Name
+                </label>
+
+                <input
+                    type="text"
+                    id="categoryNameInput"
+                    placeholder="Example: Biryanis"
+                    required
+                >
+
+            </div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="cancel-btn"
+                    id="cancelCategoryBtn"
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="save-btn"
+                    id="saveCategoryBtn"
+                >
+                    Save Category
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+
+<!-- MENU ITEM MODAL -->
+
+<div
+    class="modal"
+    id="menuItemModal"
+>
+
+    <div class="modal-box">
+
+        <div class="modal-head">
+
+            <h3 id="menuItemModalTitle">
+                Add Menu Item
+            </h3>
+
+            <button
+                type="button"
+                class="close-btn"
+                id="closeMenuItemModal"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="menuItemForm">
+
+            <input
+                type="hidden"
+                id="editingMenuItemId"
+            >
+
+
+            <div class="form-field">
+
+                <label>
+                    Category
+                </label>
+
+                <select
+                    class="form-select"
+                    id="menuCategoryInput"
+                >
+                    <option value="">
+                        Select Category
+                    </option>
+                </select>
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label>
+                    Item Name
+                </label>
+
+                <input
+                    type="text"
+                    id="menuItemNameInput"
+                    placeholder="Chicken Biryani"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label>
+                    Price
+                </label>
+
+                <input
+                    type="number"
+                    id="menuPriceInput"
+                    min="0"
+                    step="0.01"
+                    placeholder="220"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label>
+                    Type
+                </label>
+
+                <select
+                    class="form-select"
+                    id="menuTypeInput"
+                >
+                    <option value="veg">
+                        Veg
+                    </option>
+
+                    <option value="non_veg">
+                        Non Veg
+                    </option>
+
+                    <option value="egg">
+                        Egg
+                    </option>
+
+                    <option value="other">
+                        Other
+                    </option>
+                </select>
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label>
+                    Description
+                </label>
+
+                <textarea
+                    class="form-textarea"
+                    id="menuDescriptionInput"
+                    placeholder="Optional description"
+                ></textarea>
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label>
+                    Image URL
+                </label>
+
+                <input
+                    type="url"
+                    id="menuImageInput"
+                    placeholder="https://..."
+                >
+
+            </div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="cancel-btn"
+                    id="cancelMenuItemBtn"
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="save-btn"
+                    id="saveMenuItemBtn"
+                >
+                    Save Item
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- STAFF MODAL -->
+
+<div
+    class="modal"
+    id="staffModal"
+>
+
+    <div class="modal-box">
+
+        <div class="modal-head">
+
+            <h3 id="staffModalTitle">
+                Add Staff
+            </h3>
+
+            <button
+                type="button"
+                class="close-btn"
+                id="closeStaffModal"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="staffForm">
+
+            <input
+                type="hidden"
+                id="editingStaffId"
+            >
+
+
+            <div class="form-field">
+
+                <label>
+                    Full Name
+                </label>
+
+                <input
+                    type="text"
+                    id="staffNameInput"
+                    placeholder="Example: Ravi"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label>
+                    Email / Login ID
+                </label>
+
+                <input
+                    type="email"
+                    id="staffEmailInput"
+                    placeholder="ravi@restaurant.com"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label>
+                    Phone
+                </label>
+
+                <input
+                    type="tel"
+                    id="staffPhoneInput"
+                    placeholder="9876543210"
+                >
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label>
+                    Role
+                </label>
+
+                <select
+                    class="form-select"
+                    id="staffRoleInput"
+                    required
+                >
+
+                    <option value="waiter">
+                        Waiter
+                    </option>
+
+                    <option value="cashier">
+                        Cashier
+                    </option>
+
+                    <option value="kitchen">
+                        Kitchen
+                    </option>
+
+                    <option value="admin">
+                        Admin
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div
+                class="form-field"
+                id="staffPasswordField"
+            >
+
+                <label>
+                    Password
+                </label>
+
+                <input
+                    type="password"
+                    id="staffPasswordInput"
+                    placeholder="Minimum 6 characters"
+                >
+
+            </div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="cancel-btn"
+                    id="cancelStaffBtn"
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="save-btn"
+                    id="saveStaffBtn"
+                >
+                    Save Staff
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+
+<!-- RESET PASSWORD MODAL -->
+
+<div
+    class="modal"
+    id="staffPasswordModal"
+>
+
+    <div class="modal-box">
+
+        <div class="modal-head">
+
+            <h3>
+                Reset Password
+            </h3>
+
+            <button
+                type="button"
+                class="close-btn"
+                id="closeStaffPasswordModal"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="staffPasswordForm">
+
+            <input
+                type="hidden"
+                id="resetPasswordStaffId"
+            >
+
+
+            <div class="form-field">
+
+                <label>
+                    New Password
+                </label>
+
+                <input
+                    type="password"
+                    id="newStaffPasswordInput"
+                    placeholder="Minimum 6 characters"
+                    required
+                >
+
+            </div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="cancel-btn"
+                    id="cancelStaffPasswordBtn"
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="save-btn"
+                    id="saveStaffPasswordBtn"
+                >
+                    Reset Password
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<div
+    class="modal"
+    id="orderDetailsModal"
+>
+
+    <div
+        class="modal-box"
+        style="max-width:520px;"
+    >
+
+        <div class="modal-head">
+
+            <div>
+
+                <h3 id="orderDetailsTitle">
+                    Order
+                </h3>
+
+                <div
+                    style="
+                        font-size:10px;
+                        color:#6b7280;
+                        margin-top:4px;
+                    "
+                    id="orderDetailsTable"
+                ></div>
+
+            </div>
+
+            <button
+                type="button"
+                class="close-btn"
+                id="closeOrderDetailsModal"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div id="orderDetailsBody"></div>
+
+
+        <select
+            class="order-status-select"
+            id="orderStatusSelect"
+        >
+
+            <option value="open">
+                Open
+            </option>
+
+            <option value="confirmed">
+                Confirmed
+            </option>
+
+            <option value="preparing">
+                Preparing
+            </option>
+
+            <option value="ready">
+                Ready
+            </option>
+
+            <option value="served">
+                Served
+            </option>
+
+            <option value="bill_requested">
+                Bill Requested
+            </option>
+
+            <option value="billing">
+                Billing
+            </option>
+
+            <option value="paid">
+                Paid
+            </option>
+
+            <option value="cancelled">
+                Cancelled
+            </option>
+
+        </select>
+
+
+        <div class="modal-actions">
+
+            <button
+                type="button"
+                class="cancel-btn"
+                id="closeOrderBtn"
+            >
+                Close
+            </button>
+
+            <button
+                type="button"
+                class="save-btn"
+                id="updateOrderStatusBtn"
+            >
+                Update Status
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div
+    class="modal"
+    id="billingModal"
+>
+
+    <div
+        class="modal-box"
+        style="
+            max-width:560px;
+            max-height:90vh;
+            overflow:auto;
+        "
+    >
+
+        <div class="modal-head">
+
+            <div>
+
+                <h3 id="billingTitle">
+                    Bill
+                </h3>
+
+                <div
+                    id="billingTableName"
+                    style="
+                        font-size:10px;
+                        color:#6b7280;
+                        margin-top:4px;
+                    "
+                ></div>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="close-btn"
+                id="closeBillingModal"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div id="billingItems"></div>
+
+
+        <div class="bill-edit-grid">
+
+            <label>
+                Discount
+
+                <input
+                    id="billDiscountInput"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value="0"
+                >
+            </label>
+
+
+            <label>
+                Tax
+
+                <input
+                    id="billTaxInput"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value="0"
+                >
+            </label>
+
+
+            <label>
+                Service Charge
+
+                <input
+                    id="billServiceInput"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value="0"
+                >
+            </label>
+
+        </div>
+
+
+        <div
+            class="bill-summary"
+            id="billSummary"
+        ></div>
+
+
+        <div class="payment-methods">
+
+            <button
+                class="payment-method active"
+                data-method="cash"
+            >
+                Cash
+            </button>
+
+            <button
+                class="payment-method"
+                data-method="upi"
+            >
+                UPI
+            </button>
+
+            <button
+                class="payment-method"
+                data-method="card"
+            >
+                Card
+            </button>
+
+        </div>
+
+
+        <input
+            type="text"
+            class="reference-input"
+            id="paymentReferenceInput"
+            placeholder="UPI / Card reference number"
+        >
+
+
+        <div class="billing-actions">
+
+            <button
+                type="button"
+                class="reopen-btn"
+                id="reopenOrderBtn"
+            >
+                Reopen Order
+            </button>
+
+            <button
+                type="button"
+                class="update-bill-btn"
+                id="updateBillBtn"
+            >
+                Update Bill
+            </button>
+
+            <button
+                type="button"
+                class="pay-btn"
+                id="completePaymentBtn"
+            >
+                Complete Payment
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+
+<script src="admin.js"></script>
+
+</body>
+</html>

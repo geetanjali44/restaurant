@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Restaurant Kitchen</title>
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f6f7f9;
+            --white: #ffffff;
+            --text: #111827;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+
+            --dark: #111827;
+
+            --blue: #2563eb;
+            --blue-bg: #eff6ff;
+
+            --orange: #c2410c;
+            --orange-bg: #fff7ed;
+
+            --green: #15803d;
+            --green-bg: #f0fdf4;
+
+            --red: #dc2626;
+            --red-bg: #fef2f2;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        button {
+            font-family: inherit;
+        }
+
+        .app {
+            min-height: 100vh;
+        }
+
+        /* HEADER */
+
+        .header {
+            height: 70px;
+            background: white;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 22px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .brand strong {
+            display: block;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .brand span {
+            display: block;
+            font-size: 10px;
+            color: var(--muted);
+            margin-top: 3px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .staff-name {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .live-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--green-bg);
+            color: var(--green);
+            padding: 7px 10px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--green);
+        }
+
+        .logout-btn {
+            border: 1px solid var(--border);
+            background: white;
+            padding: 8px 11px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        /* MAIN */
+
+        .main {
+            max-width: 1400px;
+            margin: auto;
+            padding: 22px;
+        }
+
+        .page-head {
+            margin-bottom: 18px;
+        }
+
+        .page-head h1 {
+            font-size: 25px;
+            letter-spacing: -.5px;
+        }
+
+        .page-head p {
+            color: var(--muted);
+            font-size: 11px;
+            margin-top: 5px;
+        }
+
+        /* STATS */
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            padding: 16px;
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 25px;
+            font-weight: 800;
+            margin-top: 7px;
+        }
+
+        /* FILTERS */
+
+        .filters {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            margin-bottom: 15px;
+            padding-bottom: 3px;
+        }
+
+        .filter-btn {
+            border: 1px solid var(--border);
+            background: white;
+            color: #374151;
+            padding: 8px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .filter-btn.active {
+            background: #111827;
+            border-color: #111827;
+            color: white;
+        }
+
+        /* ORDERS GRID */
+
+        .orders-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0,1fr));
+            gap: 14px;
+        }
+
+        .order-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .order-card-head {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .order-table {
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .order-bill {
+            color: var(--muted);
+            font-size: 10px;
+            margin-top: 4px;
+        }
+
+        .order-status {
+            padding: 6px 8px;
+            border-radius: 999px;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            height: fit-content;
+        }
+
+        .status-confirmed {
+            background: var(--orange-bg);
+            color: var(--orange);
+        }
+
+        .status-preparing {
+            background: var(--blue-bg);
+            color: var(--blue);
+        }
+
+        .status-ready {
+            background: var(--green-bg);
+            color: var(--green);
+        }
+
+        .order-card-body {
+            padding: 15px;
+        }
+
+        .order-time {
+            font-size: 10px;
+            color: var(--muted);
+            margin-bottom: 12px;
+        }
+
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 9px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .item-row:last-child {
+            border-bottom: 0;
+        }
+
+        .item-name {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .item-note {
+            font-size: 9px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .item-qty {
+            font-size: 15px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .order-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            padding: 15px;
+            border-top: 1px solid var(--border);
+        }
+
+        .order-actions button {
+            height: 42px;
+            border-radius: 9px;
+            cursor: pointer;
+            font-weight: 700;
+            border: 0;
+            font-size: 11px;
+        }
+
+        .preparing-btn {
+            background: var(--blue-bg);
+            color: var(--blue);
+        }
+
+        .ready-btn {
+            background: var(--green-bg);
+            color: var(--green);
+        }
+
+        .order-actions button:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+        }
+
+        .empty {
+            grid-column: 1 / -1;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 50px 20px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        /* LOADER */
+
+        .loader {
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            background: white;
+            display: grid;
+            place-items: center;
+        }
+
+        .spinner {
+            width: 34px;
+            height: 34px;
+            border: 3px solid #e5e7eb;
+            border-top-color: #111827;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* TOAST */
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 20px;
+            transform: translate(-50%, 70px);
+            opacity: 0;
+            background: #111827;
+            color: white;
+            padding: 11px 15px;
+            border-radius: 9px;
+            font-size: 11px;
+            transition: .22s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translate(-50%, 0);
+            opacity: 1;
+        }
+
+        @media(max-width:1000px) {
+            .orders-grid {
+                grid-template-columns: repeat(2,1fr);
+            }
+        }
+
+        @media(max-width:700px) {
+
+            .main {
+                padding: 14px;
+            }
+
+            .orders-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: repeat(3,1fr);
+            }
+
+            .stat-card {
+                padding: 13px;
+            }
+
+            .stat-value {
+                font-size: 20px;
+            }
+
+            .staff-name {
+                display: none;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="loader" id="loader">
+    <div class="spinner"></div>
+</div>
+
+
+<div class="app">
+
+    <header class="header">
+
+        <div class="brand">
+
+            <strong id="restaurantName">
+                Restaurant
+            </strong>
+
+            <span>
+                Kitchen Display
+            </span>
+
+        </div>
+
+
+        <div class="header-right">
+
+            <div class="live-badge">
+                <span class="live-dot"></span>
+                Live
+            </div>
+
+            <span
+                class="staff-name"
+                id="kitchenStaffName"
+            >
+                Kitchen
+            </span>
+
+            <button
+                type="button"
+                class="logout-btn"
+                id="logoutBtn"
+            >
+                Logout
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <main class="main">
+
+        <div class="page-head">
+
+            <h1>
+                Kitchen Orders
+            </h1>
+
+            <p>
+                New orders appear automatically. Update them to Preparing or Ready.
+            </p>
+
+        </div>
+
+
+        <section class="stats">
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+                    New Orders
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="newOrdersCount"
+                >
+                    0
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+                    Preparing
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="preparingCount"
+                >
+                    0
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+                    Ready
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="readyCount"
+                >
+                    0
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <div class="filters">
+
+            <button
+                class="filter-btn active"
+                data-filter="all"
+            >
+                All
+            </button>
+
+            <button
+                class="filter-btn"
+                data-filter="confirmed"
+            >
+                New
+            </button>
+
+            <button
+                class="filter-btn"
+                data-filter="preparing"
+            >
+                Preparing
+            </button>
+
+            <button
+                class="filter-btn"
+                data-filter="ready"
+            >
+                Ready
+            </button>
+
+        </div>
+
+
+        <section
+            class="orders-grid"
+            id="ordersGrid"
+        ></section>
+
+    </main>
+
+</div>
+
+
+<div
+    class="toast"
+    id="toast"
+></div>
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+
+<script src="kitchen.js"></script>
+
+</body>
+</html>
