@@ -5106,7 +5106,7 @@ function printReceipt(
     // ========================================================
 
     const LOGO_URL =
-        "https://dummyimage.com/180x70/111827/ffffff&text=RESTAURANT";
+        "restaurat_logo.png";
 
 
     // ========================================================
