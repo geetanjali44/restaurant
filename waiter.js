@@ -1439,62 +1439,7 @@ async function init() {
 init();
 
 
-async function checkReadyOrders() {
 
-    const {
-        data,
-        error
-    } = await db.rpc(
-        "waiter_get_tables",
-        {
-            p_session_token:
-                sessionToken
-        }
-    );
-
-    if (error) {
-        console.error(
-            "Ready check error:",
-            error
-        );
-        return;
-    }
-
-    const tables =
-        data || [];
-
-
-    tables.forEach(table => {
-
-        if (
-            table.order_id &&
-            table.status === "ready"
-        ) {
-
-            const key =
-                table.order_id;
-
-            if (
-                !lastReadyOrders.has(key)
-            ) {
-
-                lastReadyOrders.add(key);
-
-                showToast(
-                    `${table.table_name} order is READY`
-                );
-
-                if (
-                    "vibrate" in navigator
-                ) {
-                    navigator.vibrate(
-                        [200,100,200]
-                    );
-                }
-            }
-        }
-    });
-}
 
 // ============================================================
 // CHECK KITCHEN READY ORDERS
@@ -1630,48 +1575,104 @@ async function checkReadyOrders() {
 // SHOW READY NOTIFICATION
 // ============================================================
 
-function showReadyNotification(
-    order
-) {
+function showReadyNotification(order) {
+
+    const tableName =
+        order.table_name ||
+        "Table";
+
+    const billNumber =
+        order.bill_number ||
+        "-";
+
+    const title =
+        `${tableName} Order Ready`;
 
     const message =
-        `${order.table_name} Order Ready`;
+        `Bill #${billNumber} is ready for service.`;
 
 
-    // Existing waiter toast
+    // ========================================================
+    // WAITER PAGE TOAST
+    // ========================================================
+
     showToast(
-        message
+        `${tableName} order is READY`
     );
 
 
-    // Vibration
+    // ========================================================
+    // PHONE VIBRATION
+    // ========================================================
 
     if (
         "vibrate" in navigator
     ) {
 
-        navigator.vibrate(
-            [
-                250,
-                120,
-                250,
-                120,
-                400
-            ]
-        );
+        navigator.vibrate([
+            250,
+            120,
+            250,
+            120,
+            400
+        ]);
     }
 
 
-    // Beep
+    // ========================================================
+    // READY SOUND
+    // ========================================================
 
     playReadySound();
 
 
-    // Browser notification if permission exists.
+    // ========================================================
+    // ANDROID APP NATIVE NOTIFICATION
+    // ========================================================
 
-    showSystemReadyNotification(
-        order
-    );
+    try {
+
+        if (
+            window.AndroidNotification &&
+            typeof window.AndroidNotification
+                .showNotification ===
+                "function"
+        ) {
+
+            window.AndroidNotification
+                .showNotification(
+                    title,
+                    message
+                );
+
+            console.log(
+                "Android notification sent:",
+                title
+            );
+
+        } else {
+
+            // Normal browser fallback
+
+            showSystemReadyNotification(
+                order
+            );
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Android notification error:",
+            error
+        );
+
+
+        // Browser fallback
+
+        showSystemReadyNotification(
+            order
+        );
+    }
 }
 
 
