@@ -50,11 +50,16 @@ let searchText = "";
 let liveTimer = null;
 
 let toastTimer = null;
-let lastReadyOrders = new Set();
 
-let readyOrderCache = new Set();
+let lastReadyOrders =
+    new Set();
 
-let readyNotificationsInitialized = false;
+let readyOrderCache =
+    new Set();
+
+let readyNotificationsInitialized =
+    false;
+
 
 // ============================================================
 // ELEMENTS
@@ -81,58 +86,94 @@ const readyOrderText =
     );
 
 const loader =
-    document.getElementById("loader");
+    document.getElementById(
+        "loader"
+    );
 
 const restaurantName =
-    document.getElementById("restaurantName");
+    document.getElementById(
+        "restaurantName"
+    );
 
 const waiterName =
-    document.getElementById("waiterName");
+    document.getElementById(
+        "waiterName"
+    );
 
 const logoutBtn =
-    document.getElementById("logoutBtn");
+    document.getElementById(
+        "logoutBtn"
+    );
 
 const tableScreen =
-    document.getElementById("tableScreen");
+    document.getElementById(
+        "tableScreen"
+    );
 
 const orderScreen =
-    document.getElementById("orderScreen");
+    document.getElementById(
+        "orderScreen"
+    );
 
 const tablesGrid =
-    document.getElementById("tablesGrid");
+    document.getElementById(
+        "tablesGrid"
+    );
 
 const backBtn =
-    document.getElementById("backBtn");
+    document.getElementById(
+        "backBtn"
+    );
 
 const selectedTableName =
-    document.getElementById("selectedTableName");
+    document.getElementById(
+        "selectedTableName"
+    );
 
 const categoryBar =
-    document.getElementById("categoryBar");
+    document.getElementById(
+        "categoryBar"
+    );
 
 const menuSearch =
-    document.getElementById("menuSearch");
+    document.getElementById(
+        "menuSearch"
+    );
 
 const menuGrid =
-    document.getElementById("menuGrid");
+    document.getElementById(
+        "menuGrid"
+    );
 
 const existingOrderWrap =
-    document.getElementById("existingOrderWrap");
+    document.getElementById(
+        "existingOrderWrap"
+    );
 
 const cartItems =
-    document.getElementById("cartItems");
+    document.getElementById(
+        "cartItems"
+    );
 
 const cartTotal =
-    document.getElementById("cartTotal");
+    document.getElementById(
+        "cartTotal"
+    );
 
 const sendOrderBtn =
-    document.getElementById("sendOrderBtn");
+    document.getElementById(
+        "sendOrderBtn"
+    );
 
 const requestBillBtn =
-    document.getElementById("requestBillBtn");
+    document.getElementById(
+        "requestBillBtn"
+    );
 
 const toast =
-    document.getElementById("toast");
+    document.getElementById(
+        "toast"
+    );
 
 
 // ============================================================
@@ -149,7 +190,10 @@ function money(value) {
             maximumFractionDigits: 2
         }
     ).format(
-        Number(value || 0)
+        Number(
+            value ||
+            0
+        )
     );
 }
 
@@ -160,12 +204,30 @@ function money(value) {
 
 function escapeHtml(value) {
 
-    return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+    return String(
+        value ??
+        ""
+    )
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
 }
 
 
@@ -179,11 +241,16 @@ function formatStatus(value) {
         return "";
     }
 
+
     return value
-        .replaceAll("_", " ")
+        .replaceAll(
+            "_",
+            " "
+        )
         .replace(
             /\b\w/g,
-            x => x.toUpperCase()
+            x =>
+                x.toUpperCase()
         );
 }
 
@@ -197,13 +264,16 @@ function showToast(message) {
     toast.textContent =
         message;
 
+
     toast.classList.add(
         "show"
     );
 
+
     clearTimeout(
         toastTimer
     );
+
 
     toastTimer =
         setTimeout(
@@ -229,9 +299,11 @@ function goLogin() {
         "restaurant_session_token"
     );
 
+
     localStorage.removeItem(
         "restaurant_user"
     );
+
 
     location.replace(
         "index.html"
@@ -260,9 +332,13 @@ async function loadInfo() {
 
     if (error) {
 
-        console.error(error);
+        console.error(
+            error
+        );
+
 
         goLogin();
+
 
         return;
     }
@@ -305,12 +381,14 @@ async function loadTables() {
             error
         );
 
+
         return;
     }
 
 
     currentTables =
-        data || [];
+        data ||
+        [];
 
 
     renderTables();
@@ -323,7 +401,9 @@ async function loadTables() {
 
 function renderTables() {
 
-    if (!currentTables.length) {
+    if (
+        !currentTables.length
+    ) {
 
         tablesGrid.innerHTML = `
             <div class="empty">
@@ -331,66 +411,69 @@ function renderTables() {
             </div>
         `;
 
+
         return;
     }
 
 
     tablesGrid.innerHTML =
         currentTables
-            .map(table => {
+            .map(
+                table => {
 
-                return `
-                    <div
-                        class="table-card"
-                        data-id="${table.id}"
-                    >
+                    return `
+                        <div
+                            class="table-card"
+                            data-id="${table.id}"
+                        >
 
-                        <div class="table-top">
+                            <div class="table-top">
 
-                            <div class="table-name">
-                                ${escapeHtml(
-                                    table.table_name
-                                )}
-                            </div>
-
-                            <span
-                                class="
-                                    table-status
+                                <div class="table-name">
                                     ${escapeHtml(
+                                        table.table_name
+                                    )}
+                                </div>
+
+                                <span
+                                    class="
+                                        table-status
+                                        ${escapeHtml(
+                                            table.status
+                                        )}
+                                    "
+                                >
+                                    ${formatStatus(
                                         table.status
                                     )}
-                                "
-                            >
-                                ${formatStatus(
-                                    table.status
-                                )}
-                            </span>
+                                </span>
+
+                            </div>
+
+
+                            <div class="table-price">
+                                ${
+                                    table.order_id
+                                    ? money(
+                                        table.grand_total
+                                    )
+                                    : "₹0"
+                                }
+                            </div>
+
+
+                            <div class="table-meta">
+                                ${
+                                    table.order_id
+                                    ? `Bill #${table.bill_number}`
+                                    : `Capacity ${table.capacity || "-"}`
+                                }
+                            </div>
 
                         </div>
-
-
-                        <div class="table-price">
-                            ${
-                                table.order_id
-                                ? money(
-                                    table.grand_total
-                                )
-                                : "₹0"
-                            }
-                        </div>
-
-
-                        <div class="table-meta">
-                            ${
-                                table.order_id
-                                ? `Bill #${table.bill_number}`
-                                : `Capacity ${table.capacity || "-"}`
-                            }
-                        </div>
-
-                    </div>
-                `;
-            })
+                    `;
+                }
+            )
             .join("");
 }
 
@@ -425,7 +508,9 @@ tablesGrid.addEventListener(
 // OPEN TABLE
 // ============================================================
 
-async function openTable(tableId) {
+async function openTable(
+    tableId
+) {
 
     selectedTable =
         currentTables.find(
@@ -438,27 +523,38 @@ async function openTable(tableId) {
     if (!selectedTable) {
         return;
     }
-if (
-    selectedTable.status ===
-        "bill_requested" ||
-    selectedTable.status ===
-        "billing"
-) {
 
-    showToast(
-        "Bill already requested. Admin must reopen the order."
-    );
 
-    return;
-}
+    if (
+        selectedTable.status ===
+            "bill_requested" ||
+        selectedTable.status ===
+            "billing"
+    ) {
 
-    cart = {};
+        showToast(
+            "Bill already requested. Admin must reopen the order."
+        );
 
-    selectedCategory = "";
 
-    searchText = "";
+        return;
+    }
 
-    menuSearch.value = "";
+
+    cart =
+        {};
+
+
+    selectedCategory =
+        "";
+
+
+    searchText =
+        "";
+
+
+    menuSearch.value =
+        "";
 
 
     selectedTableName.textContent =
@@ -497,6 +593,7 @@ backBtn.addEventListener(
             "active"
         );
 
+
         tableScreen.classList.add(
             "active"
         );
@@ -505,8 +602,10 @@ backBtn.addEventListener(
         selectedTable =
             null;
 
+
         cart =
             {};
+
 
         existingOrder =
             null;
@@ -543,17 +642,22 @@ async function loadMenu() {
             error
         );
 
+
         return;
     }
 
 
     currentMenu =
-        data || [];
+        data ||
+        [];
 
 
-    if (selectedTable) {
+    if (
+        selectedTable
+    ) {
 
         renderCategories();
+
         renderMenu();
     }
 }
@@ -565,7 +669,10 @@ async function loadMenu() {
 
 async function loadExistingOrder() {
 
-    if (!selectedTable) {
+    if (
+        !selectedTable
+    ) {
+
         return;
     }
 
@@ -593,13 +700,16 @@ async function loadExistingOrder() {
             error
         );
 
+
         return;
     }
 
 
     existingOrder =
-        data || {
-            has_order: false
+        data ||
+        {
+            has_order:
+                false
         };
 }
 
@@ -713,10 +823,12 @@ categoryBar.addEventListener(
 
 
         selectedCategory =
-            chip.dataset.id || "";
+            chip.dataset.id ||
+            "";
 
 
         renderCategories();
+
 
         renderMenu();
     }
@@ -749,10 +861,14 @@ menuSearch.addEventListener(
 function renderMenu() {
 
     let items =
-        [...currentMenu];
+        [
+            ...currentMenu
+        ];
 
 
-    if (selectedCategory) {
+    if (
+        selectedCategory
+    ) {
 
         items =
             items.filter(
@@ -763,7 +879,9 @@ function renderMenu() {
     }
 
 
-    if (searchText) {
+    if (
+        searchText
+    ) {
 
         items =
             items.filter(
@@ -777,7 +895,9 @@ function renderMenu() {
     }
 
 
-    if (!items.length) {
+    if (
+        !items.length
+    ) {
 
         menuGrid.innerHTML = `
             <div class="empty">
@@ -785,96 +905,101 @@ function renderMenu() {
             </div>
         `;
 
+
         return;
     }
 
 
     menuGrid.innerHTML =
         items
-            .map(item => {
+            .map(
+                item => {
 
-                const quantity =
-                    cart[item.id]?.quantity ||
-                    0;
-
-
-                return `
-                    <div
-                        class="
-                            menu-card
-                            ${
-                                !item.is_available
-                                ? "unavailable"
-                                : ""
-                            }
-                        "
-                    >
-
-                        <div class="menu-name">
-                            ${escapeHtml(
-                                item.item_name
-                            )}
-                        </div>
+                    const quantity =
+                        cart[
+                            item.id
+                        ]?.quantity ||
+                        0;
 
 
-                        <div class="menu-cat">
-                            ${escapeHtml(
-                                item.category_name
-                            )}
-                        </div>
+                    return `
+                        <div
+                            class="
+                                menu-card
+                                ${
+                                    !item.is_available
+                                    ? "unavailable"
+                                    : ""
+                                }
+                            "
+                        >
+
+                            <div class="menu-name">
+                                ${escapeHtml(
+                                    item.item_name
+                                )}
+                            </div>
 
 
-                        <div class="menu-price">
-                            ${money(
-                                item.price
-                            )}
-                        </div>
+                            <div class="menu-cat">
+                                ${escapeHtml(
+                                    item.category_name
+                                )}
+                            </div>
 
 
-                        <div class="qty-row">
+                            <div class="menu-price">
+                                ${money(
+                                    item.price
+                                )}
+                            </div>
 
-                            <span>
+
+                            <div class="qty-row">
+
+                                <span>
+                                    ${
+                                        item.is_available
+                                        ? ""
+                                        : "Out of stock"
+                                    }
+                                </span>
+
+
                                 ${
                                     item.is_available
-                                    ? ""
-                                    : "Out of stock"
+                                    ? `
+                                        <div class="qty-control">
+
+                                            <button
+                                                class="minus"
+                                                data-id="${item.id}"
+                                            >
+                                                −
+                                            </button>
+
+                                            <span class="qty-value">
+                                                ${quantity}
+                                            </span>
+
+                                            <button
+                                                class="plus"
+                                                data-id="${item.id}"
+                                            >
+                                                +
+                                            </button>
+
+                                        </div>
+                                    `
+                                    : ""
                                 }
-                            </span>
 
-
-                            ${
-                                item.is_available
-                                ? `
-                                    <div class="qty-control">
-
-                                        <button
-                                            class="minus"
-                                            data-id="${item.id}"
-                                        >
-                                            −
-                                        </button>
-
-                                        <span class="qty-value">
-                                            ${quantity}
-                                        </span>
-
-                                        <button
-                                            class="plus"
-                                            data-id="${item.id}"
-                                        >
-                                            +
-                                        </button>
-
-                                    </div>
-                                `
-                                : ""
-                            }
+                            </div>
 
                         </div>
-
-                    </div>
-                `;
-            })
+                    `;
+                }
+            )
             .join("");
 }
 
@@ -899,6 +1024,7 @@ menuGrid.addEventListener(
                 plus.dataset.id,
                 1
             );
+
 
             return;
         }
@@ -929,7 +1055,8 @@ function changeQty(
     const item =
         currentMenu.find(
             x =>
-                x.id === itemId
+                x.id ===
+                itemId
         );
 
 
@@ -937,36 +1064,51 @@ function changeQty(
         !item ||
         !item.is_available
     ) {
+
         return;
     }
 
 
     const current =
-        cart[itemId]?.quantity ||
+        cart[
+            itemId
+        ]?.quantity ||
         0;
 
 
     const next =
         Math.max(
             0,
-            current + change
+            current +
+            change
         );
 
 
-    if (next === 0) {
+    if (
+        next ===
+        0
+    ) {
 
-        delete cart[itemId];
+        delete cart[
+            itemId
+        ];
 
     } else {
 
-        cart[itemId] = {
+        cart[
+            itemId
+        ] = {
+
             item,
-            quantity: next
+
+            quantity:
+                next
         };
     }
 
 
     renderMenu();
+
 
     renderCart();
 }
@@ -978,27 +1120,30 @@ function changeQty(
 
 function renderExistingOrder() {
 
-   if (
-    !existingOrder?.has_order
-) {
+    if (
+        !existingOrder?.has_order
+    ) {
 
-    existingOrderWrap.innerHTML =
-        "";
-
-    requestBillBtn.style.display =
-        "none";
+        existingOrderWrap.innerHTML =
+            "";
 
 
-    readyOrderBanner.classList.remove(
-        "show"
-    );
+        requestBillBtn.style.display =
+            "none";
 
-    return;
-}
+
+        readyOrderBanner.classList.remove(
+            "show"
+        );
+
+
+        return;
+    }
 
 
     const items =
-        existingOrder.items || [];
+        existingOrder.items ||
+        [];
 
 
     existingOrderWrap.innerHTML = `
@@ -1035,14 +1180,16 @@ function renderExistingOrder() {
 
 
     requestBillBtn.style.display =
-    [
-        "served",
-        "ready"
-    ].includes(
-        existingOrder.status
-    )
-        ? "block"
-        : "none";
+        [
+            "served",
+            "ready"
+        ].includes(
+            existingOrder.status
+        )
+            ? "block"
+            : "none";
+
+
     updateReadyBanner();
 }
 
@@ -1054,10 +1201,14 @@ function renderExistingOrder() {
 function renderCart() {
 
     const values =
-        Object.values(cart);
+        Object.values(
+            cart
+        );
 
 
-    if (!values.length) {
+    if (
+        !values.length
+    ) {
 
         cartItems.innerHTML = `
             <div class="empty">
@@ -1067,11 +1218,14 @@ function renderCart() {
 
 
         cartTotal.textContent =
-            money(0);
+            money(
+                0
+            );
 
 
         sendOrderBtn.disabled =
             true;
+
 
         return;
     }
@@ -1079,36 +1233,45 @@ function renderCart() {
 
     cartItems.innerHTML =
         values
-            .map(entry => {
+            .map(
+                entry => {
 
-                const total =
-                    Number(entry.item.price) *
-                    entry.quantity;
+                    const total =
+                        Number(
+                            entry.item.price
+                        ) *
+                        entry.quantity;
 
 
-                return `
-                    <div class="cart-item">
+                    return `
+                        <div class="cart-item">
 
-                        <span>
-                            ${escapeHtml(
-                                entry.item.item_name
-                            )}
-                            × ${entry.quantity}
-                        </span>
+                            <span>
+                                ${escapeHtml(
+                                    entry.item.item_name
+                                )}
+                                × ${entry.quantity}
+                            </span>
 
-                        <strong>
-                            ${money(total)}
-                        </strong>
+                            <strong>
+                                ${money(
+                                    total
+                                )}
+                            </strong>
 
-                    </div>
-                `;
-            })
+                        </div>
+                    `;
+                }
+            )
             .join("");
 
 
     const total =
         values.reduce(
-            (sum,entry) =>
+            (
+                sum,
+                entry
+            ) =>
                 sum +
                 Number(
                     entry.item.price
@@ -1119,7 +1282,9 @@ function renderCart() {
 
 
     cartTotal.textContent =
-        money(total);
+        money(
+            total
+        );
 
 
     sendOrderBtn.disabled =
@@ -1139,15 +1304,21 @@ sendOrderBtn.addEventListener(
 
 async function sendOrder() {
 
-    if (!selectedTable) {
+    if (
+        !selectedTable
+    ) {
+
         return;
     }
 
 
     const items =
-        Object.values(cart)
+        Object.values(
+            cart
+        )
             .map(
                 entry => ({
+
                     menu_item_id:
                         entry.item.id,
 
@@ -1157,13 +1328,17 @@ async function sendOrder() {
             );
 
 
-    if (!items.length) {
+    if (
+        !items.length
+    ) {
+
         return;
     }
 
 
     sendOrderBtn.disabled =
         true;
+
 
     sendOrderBtn.textContent =
         "Sending...";
@@ -1178,6 +1353,7 @@ async function sendOrder() {
             await db.rpc(
                 "waiter_send_order",
                 {
+
                     p_session_token:
                         sessionToken,
 
@@ -1191,8 +1367,44 @@ async function sendOrder() {
 
 
         if (error) {
+
             throw error;
         }
+
+
+        // ====================================================
+        // FCM PUSH -> KITCHEN
+        // ====================================================
+
+        await sendRestaurantPush({
+
+            sourceRole:
+                "waiter",
+
+            targetRole:
+                "kitchen",
+
+            title:
+                `New Order • ${selectedTable.table_name}`,
+
+            body:
+                `${items.length} item(s) received from ${selectedTable.table_name}.`,
+
+            type:
+                "new_order",
+
+            orderId:
+                data?.order_id ||
+                data?.id ||
+                existingOrder?.id ||
+                "",
+
+            tableId:
+                selectedTable.id,
+
+            tableName:
+                selectedTable.table_name
+        });
 
 
         showToast(
@@ -1214,7 +1426,9 @@ async function sendOrder() {
         renderAll();
 
 
-    } catch (error) {
+    } catch (
+        error
+    ) {
 
         console.error(
             "Send order error:",
@@ -1232,6 +1446,7 @@ async function sendOrder() {
 
         sendOrderBtn.disabled =
             false;
+
 
         sendOrderBtn.textContent =
             "Send Order";
@@ -1255,6 +1470,7 @@ async function requestBill() {
         !selectedTable ||
         !existingOrder?.has_order
     ) {
+
         return;
     }
 
@@ -1272,6 +1488,7 @@ async function requestBill() {
             await db.rpc(
                 "waiter_request_bill",
                 {
+
                     p_session_token:
                         sessionToken,
 
@@ -1282,8 +1499,43 @@ async function requestBill() {
 
 
         if (error) {
+
             throw error;
         }
+
+
+        // ====================================================
+        // FCM PUSH -> CASHIER
+        // ====================================================
+
+        await sendRestaurantPush({
+
+            sourceRole:
+                "waiter",
+
+            targetRole:
+                "cashier",
+
+            title:
+                `Bill Requested • ${selectedTable.table_name}`,
+
+            body:
+                `${selectedTable.table_name} is ready for billing.`,
+
+            type:
+                "bill_requested",
+
+            orderId:
+                existingOrder?.id ||
+                existingOrder?.order_id ||
+                "",
+
+            tableId:
+                selectedTable.id,
+
+            tableName:
+                selectedTable.table_name
+        });
 
 
         showToast(
@@ -1301,7 +1553,9 @@ async function requestBill() {
         renderAll();
 
 
-    } catch (error) {
+    } catch (
+        error
+    ) {
 
         showToast(
             error.message ||
@@ -1323,12 +1577,13 @@ async function requestBill() {
 
 function startLiveSync() {
 
-    if (liveTimer) {
+    if (
+        liveTimer
+    ) {
 
         clearInterval(
             liveTimer
         );
-
     }
 
 
@@ -1342,7 +1597,6 @@ function startLiveSync() {
                 ) {
 
                     return;
-
                 }
 
 
@@ -1353,15 +1607,17 @@ function startLiveSync() {
                 ]);
 
 
-                if (selectedTable) {
+                if (
+                    selectedTable
+                ) {
 
                     await loadExistingOrder();
 
 
                     renderExistingOrder();
 
-                    renderCart();
 
+                    renderCart();
                 }
 
             },
@@ -1380,7 +1636,9 @@ logoutBtn.addEventListener(
 
         try {
 
-            if (liveTimer) {
+            if (
+                liveTimer
+            ) {
 
                 clearInterval(
                     liveTimer
@@ -1396,9 +1654,15 @@ logoutBtn.addEventListener(
                 }
             );
 
-        } catch (error) {
 
-            console.error(error);
+        } catch (
+            error
+        ) {
+
+            console.error(
+                error
+            );
+
 
         } finally {
 
@@ -1414,9 +1678,12 @@ logoutBtn.addEventListener(
 
 async function init() {
 
-    if (!sessionToken) {
+    if (
+        !sessionToken
+    ) {
 
         goLogin();
+
 
         return;
     }
@@ -1428,17 +1695,35 @@ async function init() {
     ]);
 
 
+    await saveFCMToken(
+        "waiter"
+    );
+
+
+    console.log(
+        "FCM bridge:",
+        window.AndroidFCM
+    );
+
+
+    console.log(
+        "FCM token:",
+        window.AndroidFCM?.getToken?.()
+    );
+
+
     loader.style.display =
         "none";
+
+
     requestNotificationPermission();
+
 
     startLiveSync();
 }
 
 
 init();
-
-
 
 
 // ============================================================
@@ -1470,12 +1755,14 @@ async function checkReadyOrders() {
                 error
             );
 
+
             return;
         }
 
 
         const readyOrders =
-            data || [];
+            data ||
+            [];
 
 
         // First poll lo already existing READY orders ki
@@ -1491,7 +1778,6 @@ async function checkReadyOrders() {
                     readyOrderCache.add(
                         order.order_id
                     );
-
                 }
             );
 
@@ -1525,13 +1811,11 @@ async function checkReadyOrders() {
                 showReadyNotification(
                     order
                 );
-
             }
         );
 
 
         // Orders READY state nundi move ayithe cache remove.
-        // Same order later malli ready ayithe notification allow.
 
         const currentlyReady =
             new Set(
@@ -1557,12 +1841,13 @@ async function checkReadyOrders() {
                         orderId
                     );
                 }
-
             }
         );
 
 
-    } catch (error) {
+    } catch (
+        error
+    ) {
 
         console.error(
             "Ready notification error:",
@@ -1571,39 +1856,37 @@ async function checkReadyOrders() {
     }
 }
 
+
 // ============================================================
 // SHOW READY NOTIFICATION
 // ============================================================
 
-function showReadyNotification(order) {
+function showReadyNotification(
+    order
+) {
 
     const tableName =
         order.table_name ||
         "Table";
 
+
     const billNumber =
         order.bill_number ||
         "-";
 
+
     const title =
         `${tableName} Order Ready`;
+
 
     const message =
         `Bill #${billNumber} is ready for service.`;
 
 
-    // ========================================================
-    // WAITER PAGE TOAST
-    // ========================================================
-
     showToast(
         `${tableName} order is READY`
     );
 
-
-    // ========================================================
-    // PHONE VIBRATION
-    // ========================================================
 
     if (
         "vibrate" in navigator
@@ -1619,22 +1902,15 @@ function showReadyNotification(order) {
     }
 
 
-    // ========================================================
-    // READY SOUND
-    // ========================================================
-
     playReadySound();
 
-
-    // ========================================================
-    // ANDROID APP NATIVE NOTIFICATION
-    // ========================================================
 
     try {
 
         if (
             window.AndroidNotification &&
-            typeof window.AndroidNotification
+            typeof window
+                .AndroidNotification
                 .showNotification ===
                 "function"
         ) {
@@ -1645,29 +1921,30 @@ function showReadyNotification(order) {
                     message
                 );
 
+
             console.log(
                 "Android notification sent:",
                 title
             );
 
-        } else {
 
-            // Normal browser fallback
+        } else {
 
             showSystemReadyNotification(
                 order
             );
         }
 
-    } catch (error) {
+
+    } catch (
+        error
+    ) {
 
         console.error(
             "Android notification error:",
             error
         );
 
-
-        // Browser fallback
 
         showSystemReadyNotification(
             order
@@ -1689,7 +1966,10 @@ function playReadySound() {
             window.webkitAudioContext;
 
 
-        if (!AudioContext) {
+        if (
+            !AudioContext
+        ) {
+
             return;
         }
 
@@ -1730,10 +2010,12 @@ function playReadySound() {
         );
 
 
-        gain.gain.exponentialRampToValueAtTime(
-            0.01,
-            context.currentTime + 0.4
-        );
+        gain.gain
+            .exponentialRampToValueAtTime(
+                0.01,
+                context.currentTime +
+                0.4
+            );
 
 
         oscillator.start();
@@ -1745,7 +2027,9 @@ function playReadySound() {
         );
 
 
-    } catch (error) {
+    } catch (
+        error
+    ) {
 
         console.log(
             "Sound unavailable:",
@@ -1754,6 +2038,7 @@ function playReadySound() {
     }
 }
 
+
 // ============================================================
 // SYSTEM NOTIFICATION
 // ============================================================
@@ -1761,8 +2046,12 @@ function playReadySound() {
 async function requestNotificationPermission() {
 
     if (
-        !("Notification" in window)
+        !(
+            "Notification"
+            in window
+        )
     ) {
+
         return;
     }
 
@@ -1777,7 +2066,10 @@ async function requestNotificationPermission() {
             await Notification
                 .requestPermission();
 
-        } catch (error) {
+
+        } catch (
+            error
+        ) {
 
             console.log(
                 "Notification permission:",
@@ -1793,8 +2085,12 @@ function showSystemReadyNotification(
 ) {
 
     if (
-        !("Notification" in window)
+        !(
+            "Notification"
+            in window
+        )
     ) {
+
         return;
     }
 
@@ -1803,6 +2099,7 @@ function showSystemReadyNotification(
         Notification.permission !==
         "granted"
     ) {
+
         return;
     }
 
@@ -1812,6 +2109,7 @@ function showSystemReadyNotification(
         new Notification(
             `${order.table_name} Order Ready`,
             {
+
                 body:
                     `Bill #${order.bill_number} is ready for service.`,
 
@@ -1821,7 +2119,9 @@ function showSystemReadyNotification(
         );
 
 
-    } catch (error) {
+    } catch (
+        error
+    ) {
 
         console.log(
             "Notification error:",
@@ -1829,6 +2129,12 @@ function showSystemReadyNotification(
         );
     }
 }
+
+
+// ============================================================
+// UPDATE READY BANNER
+// ============================================================
+
 function updateReadyBanner() {
 
     if (
@@ -1842,8 +2148,10 @@ function updateReadyBanner() {
             "ready"
         );
 
+
         markServedBtn.style.display =
             "none";
+
 
         return;
     }
@@ -1857,11 +2165,15 @@ function updateReadyBanner() {
     // PREPARING
     // ========================================================
 
-    if (status === "preparing") {
+    if (
+        status ===
+        "preparing"
+    ) {
 
         readyOrderBanner.classList.remove(
             "ready"
         );
+
 
         readyOrderBanner.classList.add(
             "show",
@@ -1881,7 +2193,8 @@ function updateReadyBanner() {
             .querySelector(
                 ".ready-order-icon"
             )
-            .textContent = "•••";
+            .textContent =
+                "•••";
 
 
         markServedBtn.style.display =
@@ -1896,11 +2209,15 @@ function updateReadyBanner() {
     // READY
     // ========================================================
 
-    if (status === "ready") {
+    if (
+        status ===
+        "ready"
+    ) {
 
         readyOrderBanner.classList.remove(
             "preparing"
         );
+
 
         readyOrderBanner.classList.add(
             "show",
@@ -1920,7 +2237,8 @@ function updateReadyBanner() {
             .querySelector(
                 ".ready-order-icon"
             )
-            .textContent = "✓";
+            .textContent =
+                "✓";
 
 
         markServedBtn.style.display =
@@ -1930,10 +2248,6 @@ function updateReadyBanner() {
         return;
     }
 
-
-    // ========================================================
-    // OTHER STATUS
-    // ========================================================
 
     readyOrderBanner.classList.remove(
         "show",
@@ -1946,7 +2260,8 @@ function updateReadyBanner() {
         "none";
 }
 
- // ============================================================
+
+// ============================================================
 // MARK ORDER AS SERVED
 // ============================================================
 
@@ -1962,6 +2277,7 @@ async function markOrderServed() {
         !selectedTable ||
         !existingOrder?.has_order
     ) {
+
         return;
     }
 
@@ -1974,6 +2290,7 @@ async function markOrderServed() {
         showToast(
             "Order is not ready yet"
         );
+
 
         return;
     }
@@ -2000,6 +2317,7 @@ async function markOrderServed() {
             await db.rpc(
                 "waiter_mark_served",
                 {
+
                     p_session_token:
                         sessionToken,
 
@@ -2010,6 +2328,7 @@ async function markOrderServed() {
 
 
         if (error) {
+
             throw error;
         }
 
@@ -2028,10 +2347,13 @@ async function markOrderServed() {
 
         renderExistingOrder();
 
+
         renderCart();
 
 
-    } catch (error) {
+    } catch (
+        error
+    ) {
 
         console.error(
             "Mark served error:",
@@ -2050,7 +2372,255 @@ async function markOrderServed() {
         markServedBtn.disabled =
             false;
 
+
         markServedBtn.textContent =
             oldText;
+    }
+}
+
+
+// ============================================================
+// SAVE FCM TOKEN
+// ============================================================
+
+async function saveFCMToken(
+    role
+) {
+
+    try {
+
+        if (
+            !window.AndroidFCM ||
+            typeof window
+                .AndroidFCM
+                .getToken !==
+                "function"
+        ) {
+
+            console.log(
+                "Android FCM bridge not available"
+            );
+
+
+            return;
+        }
+
+
+        let token =
+            "";
+
+
+        // Token ready avvadaniki wait
+        for (
+            let attempt = 0;
+            attempt < 5;
+            attempt++
+        ) {
+
+            token =
+                String(
+                    window.AndroidFCM
+                        .getToken() ||
+                    ""
+                )
+                    .trim();
+
+
+            if (
+                token
+            ) {
+
+                break;
+            }
+
+
+            await new Promise(
+                resolve =>
+                    setTimeout(
+                        resolve,
+                        1000
+                    )
+            );
+        }
+
+
+        if (
+            !token
+        ) {
+
+            console.log(
+                "FCM token not ready"
+            );
+
+
+            return;
+        }
+
+
+        const {
+            data,
+            error
+        } =
+            await db.rpc(
+                "save_staff_fcm_token",
+                {
+
+                    p_session_token:
+                        sessionToken,
+
+                    p_fcm_token:
+                        token,
+
+                    p_role:
+                        role,
+
+                    p_device_name:
+                        navigator.userAgent
+                }
+            );
+
+
+        if (
+            error
+        ) {
+
+            console.error(
+                "FCM token save error:",
+                error
+            );
+
+
+            return;
+        }
+
+
+        console.log(
+            "FCM token saved:",
+            data
+        );
+
+
+    } catch (
+        error
+    ) {
+
+        console.error(
+            "FCM setup error:",
+            error
+        );
+    }
+}
+
+
+// ============================================================
+// SEND RESTAURANT PUSH
+// ============================================================
+
+async function sendRestaurantPush({
+
+    sourceRole,
+
+    targetRole,
+
+    title,
+
+    body,
+
+    type,
+
+    orderId = "",
+
+    tableId = "",
+
+    tableName = ""
+
+}) {
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await db.functions.invoke(
+                "send-restaurant-push",
+                {
+
+                    body: {
+
+                        session_token:
+                            sessionToken,
+
+                        source_role:
+                            sourceRole,
+
+                        target_role:
+                            targetRole,
+
+                        title,
+
+                        body,
+
+                        type,
+
+                        order_id:
+                            orderId
+                            ? String(
+                                orderId
+                            )
+                            : "",
+
+                        table_id:
+                            tableId
+                            ? String(
+                                tableId
+                            )
+                            : "",
+
+                        table_name:
+                            tableName
+                            ? String(
+                                tableName
+                            )
+                            : ""
+                    }
+                }
+            );
+
+
+        if (
+            error
+        ) {
+
+            console.error(
+                "FCM push error:",
+                error
+            );
+
+
+            return false;
+        }
+
+
+        console.log(
+            "FCM push:",
+            data
+        );
+
+
+        return true;
+
+
+    } catch (
+        error
+    ) {
+
+        console.error(
+            "FCM push exception:",
+            error
+        );
+
+
+        return false;
     }
 }
