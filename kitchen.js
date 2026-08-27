@@ -5,10 +5,6 @@
 // ============================================================
 
 
-// ============================================================
-// CONFIG
-// ============================================================
-
 const SUPABASE_URL =
     "https://ovrxvvmywpoakjlsiuni.supabase.co";
 
@@ -37,31 +33,36 @@ const sessionToken =
     );
 
 
+// ============================================================
+// STATE
+// ============================================================
+
 let currentOrders = [];
 
 let currentOrderDetails = {};
 
-let currentFilter = "all";
+let currentFilter =
+    "all";
 
-let liveTimer = null;
+let liveTimer =
+    null;
 
-let toastTimer = null;
+let toastTimer =
+    null;
 
-let isLoadingOrders = false;
+let isLoadingOrders =
+    false;
 
 
 // ============================================================
 // KITCHEN NOTIFICATION STATE
 // ============================================================
 
-// First load lo already existing orders ki
-// notification pampakunda cache initialize chestam.
+let kitchenKnownOrderIds =
+    new Set();
 
 let kitchenNotificationInitialized =
     false;
-
-const kitchenKnownOrderIds =
-    new Set();
 
 
 // ============================================================
@@ -73,45 +74,48 @@ const loader =
         "loader"
     );
 
+
 const restaurantName =
     document.getElementById(
         "restaurantName"
     );
+
 
 const kitchenStaffName =
     document.getElementById(
         "kitchenStaffName"
     );
 
+
 const logoutBtn =
     document.getElementById(
         "logoutBtn"
     );
 
-const newOrdersCount =
-    document.getElementById(
-        "newOrdersCount"
-    );
-
-const preparingCount =
-    document.getElementById(
-        "preparingCount"
-    );
-
-const readyCount =
-    document.getElementById(
-        "readyCount"
-    );
 
 const ordersGrid =
     document.getElementById(
         "ordersGrid"
     );
 
-const filterButtons =
-    document.querySelectorAll(
-        ".filter-btn"
+
+const newOrdersCount =
+    document.getElementById(
+        "newOrdersCount"
     );
+
+
+const preparingCount =
+    document.getElementById(
+        "preparingCount"
+    );
+
+
+const readyCount =
+    document.getElementById(
+        "readyCount"
+    );
+
 
 const toast =
     document.getElementById(
@@ -119,29 +123,88 @@ const toast =
     );
 
 
+const filterButtons =
+    document.querySelectorAll(
+        "[data-filter]"
+    );
+
+
 // ============================================================
-// HELPERS
+// MONEY
+// ============================================================
+
+function money(value) {
+
+    return new Intl.NumberFormat(
+        "en-IN",
+        {
+            style:
+                "currency",
+
+            currency:
+                "INR",
+
+            maximumFractionDigits:
+                2
+        }
+    ).format(
+        Number(
+            value ||
+            0
+        )
+    );
+}
+
+
+// ============================================================
+// ESCAPE HTML
 // ============================================================
 
 function escapeHtml(value) {
 
-    return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+    return String(
+        value ??
+        ""
+    )
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
 }
 
 
-function formatStatus(status) {
+// ============================================================
+// FORMAT STATUS
+// ============================================================
 
-    if (!status) {
+function formatStatus(value) {
+
+    if (!value) {
         return "";
     }
 
-    return status
-        .replaceAll("_", " ")
+
+    return value
+        .replaceAll(
+            "_",
+            " "
+        )
         .replace(
             /\b\w/g,
             char =>
@@ -150,22 +213,45 @@ function formatStatus(status) {
 }
 
 
+// ============================================================
+// FORMAT TIME
+// ============================================================
+
 function formatTime(value) {
 
     if (!value) {
         return "";
     }
 
-    return new Date(value)
-        .toLocaleTimeString(
+
+    try {
+
+        return new Intl.DateTimeFormat(
             "en-IN",
             {
-                hour: "2-digit",
-                minute: "2-digit"
+                hour:
+                    "2-digit",
+
+                minute:
+                    "2-digit"
             }
+        ).format(
+            new Date(
+                value
+            )
         );
+
+
+    } catch (error) {
+
+        return "";
+    }
 }
 
+
+// ============================================================
+// FORMAT ELAPSED TIME
+// ============================================================
 
 function formatElapsedTime(value) {
 
@@ -173,47 +259,72 @@ function formatElapsedTime(value) {
         return "";
     }
 
+
     const created =
-        new Date(value).getTime();
+        new Date(
+            value
+        ).getTime();
+
 
     const now =
         Date.now();
 
-    const diffMinutes =
+
+    const difference =
         Math.max(
             0,
-            Math.floor(
-                (now - created) /
-                60000
-            )
+            now -
+            created
         );
 
 
-    if (diffMinutes < 1) {
+    const minutes =
+        Math.floor(
+            difference /
+            60000
+        );
+
+
+    if (
+        minutes <
+        1
+    ) {
+
         return "Just now";
     }
 
 
-    if (diffMinutes < 60) {
-        return `${diffMinutes} min ago`;
+    if (
+        minutes <
+        60
+    ) {
+
+        return `${minutes} min`;
     }
 
 
     const hours =
         Math.floor(
-            diffMinutes / 60
+            minutes /
+            60
         );
 
-    const minutes =
-        diffMinutes % 60;
+
+    const remainingMinutes =
+        minutes %
+        60;
 
 
-    if (minutes === 0) {
-        return `${hours} hr ago`;
+    if (
+        remainingMinutes ===
+        0
+    ) {
+
+        return `${hours} hr`;
     }
 
 
-    return `${hours} hr ${minutes} min ago`;
+    return `${hours} hr ${remainingMinutes} min`;
 }
 
 
@@ -257,20 +368,245 @@ function showToast(message) {
 
 
 // ============================================================
-// STAFF NOTIFICATION
+// NOTIFICATION SOUND
 // ============================================================
 
-function sendStaffNotification(
-    title,
-    body,
-    tag = ""
-) {
+function playKitchenNotificationSound() {
 
     try {
 
-        // ====================================================
-        // ANDROID WEBVIEW NATIVE NOTIFICATION
-        // ====================================================
+        const AudioContext =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+
+        if (!AudioContext) {
+            return;
+        }
+
+
+        const audioContext =
+            new AudioContext();
+
+
+        const oscillator =
+            audioContext
+                .createOscillator();
+
+
+        const gain =
+            audioContext
+                .createGain();
+
+
+        oscillator.connect(
+            gain
+        );
+
+
+        gain.connect(
+            audioContext.destination
+        );
+
+
+        oscillator.type =
+            "sine";
+
+
+        oscillator.frequency
+            .setValueAtTime(
+                880,
+                audioContext.currentTime
+            );
+
+
+        oscillator.frequency
+            .setValueAtTime(
+                1100,
+                audioContext.currentTime +
+                0.18
+            );
+
+
+        gain.gain
+            .setValueAtTime(
+                0.22,
+                audioContext.currentTime
+            );
+
+
+        gain.gain
+            .exponentialRampToValueAtTime(
+                0.01,
+                audioContext.currentTime +
+                0.5
+            );
+
+
+        oscillator.start(
+            audioContext.currentTime
+        );
+
+
+        oscillator.stop(
+            audioContext.currentTime +
+            0.5
+        );
+
+
+    } catch (error) {
+
+        console.log(
+            "Kitchen sound unavailable:",
+            error
+        );
+    }
+}
+
+
+// ============================================================
+// BROWSER NOTIFICATION PERMISSION
+// ============================================================
+
+async function requestStaffNotificationPermission() {
+
+    if (
+        !(
+            "Notification"
+            in window
+        )
+    ) {
+
+        return;
+    }
+
+
+    if (
+        Notification.permission ===
+        "default"
+    ) {
+
+        try {
+
+            await Notification
+                .requestPermission();
+
+
+        } catch (error) {
+
+            console.log(
+                "Kitchen notification permission:",
+                error
+            );
+        }
+    }
+}
+
+
+// ============================================================
+// BROWSER NOTIFICATION FALLBACK
+// ============================================================
+
+function showKitchenBrowserNotification(
+    title,
+    body,
+    tag
+) {
+
+    if (
+        !(
+            "Notification"
+            in window
+        )
+    ) {
+
+        return;
+    }
+
+
+    if (
+        Notification.permission !==
+        "granted"
+    ) {
+
+        return;
+    }
+
+
+    try {
+
+        new Notification(
+            title,
+            {
+                body:
+                    body,
+
+                tag:
+                    tag
+            }
+        );
+
+
+    } catch (error) {
+
+        console.log(
+            "Kitchen browser notification error:",
+            error
+        );
+    }
+}
+
+
+// ============================================================
+// NATIVE + BROWSER NOTIFICATION
+// ============================================================
+
+function notifyKitchen(
+    title,
+    body,
+    tag
+) {
+
+    // ========================================================
+    // TOAST
+    // ========================================================
+
+    showToast(
+        body
+    );
+
+
+    // ========================================================
+    // VIBRATION
+    // ========================================================
+
+    if (
+        "vibrate"
+        in navigator
+    ) {
+
+        navigator.vibrate([
+            250,
+            120,
+            250,
+            120,
+            450
+        ]);
+    }
+
+
+    // ========================================================
+    // SOUND
+    // ========================================================
+
+    playKitchenNotificationSound();
+
+
+    // ========================================================
+    // ANDROID NATIVE NOTIFICATION
+    // ========================================================
+
+    try {
 
         if (
             window.AndroidNotification &&
@@ -280,212 +616,38 @@ function sendStaffNotification(
                 "function"
         ) {
 
-            window.AndroidNotification
+            window
+                .AndroidNotification
                 .showNotification(
-                    String(title),
-                    String(body)
+                    title,
+                    body
                 );
 
+
+            console.log(
+                "Kitchen native notification sent:",
+                title
+            );
+
+
             return;
         }
 
 
-        // ====================================================
-        // NORMAL BROWSER FALLBACK
-        // ====================================================
-
-        if (
-            "Notification" in window &&
-            Notification.permission ===
-                "granted"
-        ) {
-
-            new Notification(
-                String(title),
-                {
-                    body:
-                        String(body),
-
-                    tag:
-                        String(
-                            tag ||
-                            title
-                        )
-                }
-            );
-        }
-
     } catch (error) {
 
-        console.log(
-            "Notification unavailable:",
+        console.error(
+            "Kitchen native notification error:",
             error
         );
     }
-}
 
 
-// ============================================================
-// REQUEST BROWSER NOTIFICATION PERMISSION
-// ============================================================
+    // ========================================================
+    // BROWSER FALLBACK
+    // ========================================================
 
-async function requestStaffNotificationPermission() {
-
-    try {
-
-        if (
-            "Notification" in window &&
-            Notification.permission ===
-                "default"
-        ) {
-
-            await Notification
-                .requestPermission();
-        }
-
-    } catch (error) {
-
-        console.log(
-            "Notification permission unavailable:",
-            error
-        );
-    }
-}
-
-
-// ============================================================
-// NOTIFICATION VIBRATION
-// ============================================================
-
-function vibrateStaffNotification() {
-
-    try {
-
-        if (
-            "vibrate" in navigator
-        ) {
-
-            navigator.vibrate([
-                250,
-                120,
-                250,
-                120,
-                400
-            ]);
-        }
-
-    } catch (error) {
-
-        console.log(
-            "Vibration unavailable:",
-            error
-        );
-    }
-}
-
-
-// ============================================================
-// NOTIFICATION SOUND
-// ============================================================
-
-function playStaffNotificationSound() {
-
-    try {
-
-        const AudioContextClass =
-            window.AudioContext ||
-            window.webkitAudioContext;
-
-
-        if (!AudioContextClass) {
-            return;
-        }
-
-
-        const context =
-            new AudioContextClass();
-
-
-        const oscillator =
-            context.createOscillator();
-
-
-        const gain =
-            context.createGain();
-
-
-        oscillator.connect(
-            gain
-        );
-
-
-        gain.connect(
-            context.destination
-        );
-
-
-        oscillator.type =
-            "sine";
-
-
-        oscillator.frequency.value =
-            880;
-
-
-        gain.gain.setValueAtTime(
-            0.22,
-            context.currentTime
-        );
-
-
-        gain.gain
-            .exponentialRampToValueAtTime(
-                0.01,
-                context.currentTime +
-                    0.4
-            );
-
-
-        oscillator.start();
-
-
-        oscillator.stop(
-            context.currentTime +
-                0.4
-        );
-
-    } catch (error) {
-
-        console.log(
-            "Sound unavailable:",
-            error
-        );
-    }
-}
-
-
-// ============================================================
-// NOTIFY KITCHEN
-// ============================================================
-
-function notifyKitchen(
-    title,
-    body,
-    tag
-) {
-
-    showToast(
-        title
-    );
-
-
-    vibrateStaffNotification();
-
-
-    playStaffNotificationSound();
-
-
-    sendStaffNotification(
+    showKitchenBrowserNotification(
         title,
         body,
         tag
@@ -498,14 +660,8 @@ function notifyKitchen(
 // ============================================================
 
 function checkKitchenNewOrderNotifications(
-    orders
+    rows
 ) {
-
-    const rows =
-        Array.isArray(orders)
-            ? orders
-            : [];
-
 
     // ========================================================
     // FIRST LOAD
@@ -518,11 +674,12 @@ function checkKitchenNewOrderNotifications(
         rows.forEach(
             order => {
 
-                kitchenKnownOrderIds.add(
-                    String(
-                        order.id
-                    )
-                );
+                kitchenKnownOrderIds
+                    .add(
+                        String(
+                            order.id
+                        )
+                    );
             }
         );
 
@@ -536,7 +693,7 @@ function checkKitchenNewOrderNotifications(
 
 
     // ========================================================
-    // DETECT NEW ORDER
+    // CHECK NEW ORDERS
     // ========================================================
 
     rows.forEach(
@@ -549,31 +706,19 @@ function checkKitchenNewOrderNotifications(
 
 
             if (
-                kitchenKnownOrderIds
-                    .has(
-                        orderId
-                    )
+                kitchenKnownOrderIds.has(
+                    orderId
+                )
             ) {
 
                 return;
             }
 
 
-            kitchenKnownOrderIds.add(
-                orderId
-            );
-
-
-            // Only incoming confirmed orders
-            // should notify kitchen.
-
-            if (
-                order.status !==
-                "confirmed"
-            ) {
-
-                return;
-            }
+            kitchenKnownOrderIds
+                .add(
+                    orderId
+                );
 
 
             const tableName =
@@ -638,8 +783,6 @@ function checkKitchenNewOrderNotifications(
         }
     );
 }
-
-
 // ============================================================
 // GO LOGIN
 // ============================================================
@@ -1174,8 +1317,6 @@ function renderOrderCard(
         </article>
     `;
 }
-
-
 // ============================================================
 // ORDER ACTION CLICK
 // ============================================================
@@ -1251,7 +1392,8 @@ async function updateKitchenStatus(
 
 
     button.textContent =
-        status === "preparing"
+        status ===
+            "preparing"
             ? "Updating..."
             : "Marking...";
 
@@ -1280,6 +1422,64 @@ async function updateKitchenStatus(
         if (error) {
 
             throw error;
+        }
+
+
+        // ====================================================
+        // FCM PUSH -> WAITER WHEN ORDER IS READY
+        // ====================================================
+
+        if (
+            status ===
+            "ready"
+        ) {
+
+            const order =
+                currentOrders.find(
+                    item =>
+                        String(
+                            item.id
+                        ) ===
+                        String(
+                            orderId
+                        )
+                );
+
+
+            await sendRestaurantPush({
+
+                sourceRole:
+                    "kitchen",
+
+                targetRole:
+                    "waiter",
+
+                title:
+                    `Order Ready • ${
+                        order?.table_name ||
+                        "Table"
+                    }`,
+
+                body:
+                    `Bill #${
+                        order?.bill_number ||
+                        ""
+                    } is ready to serve.`,
+
+                type:
+                    "order_ready",
+
+                orderId:
+                    orderId,
+
+                tableId:
+                    order?.table_id ||
+                    "",
+
+                tableName:
+                    order?.table_name ||
+                    "Table"
+            });
         }
 
 
@@ -1322,7 +1522,9 @@ async function updateKitchenStatus(
 
 function startLiveSync() {
 
-    if (liveTimer) {
+    if (
+        liveTimer
+    ) {
 
         clearInterval(
             liveTimer
@@ -1380,7 +1582,9 @@ logoutBtn?.addEventListener(
 
         try {
 
-            if (liveTimer) {
+            if (
+                liveTimer
+            ) {
 
                 clearInterval(
                     liveTimer
@@ -1388,7 +1592,9 @@ logoutBtn?.addEventListener(
             }
 
 
-            if (sessionToken) {
+            if (
+                sessionToken
+            ) {
 
                 await db.rpc(
                     "staff_logout",
@@ -1422,7 +1628,9 @@ logoutBtn?.addEventListener(
 
 async function init() {
 
-    if (!sessionToken) {
+    if (
+        !sessionToken
+    ) {
 
         goLogin();
 
@@ -1435,6 +1643,11 @@ async function init() {
         await loadKitchenInfo();
 
 
+        await saveFCMToken(
+            "kitchen"
+        );
+
+
         // Browser notification fallback permission
         await requestStaffNotificationPermission();
 
@@ -1443,7 +1656,9 @@ async function init() {
         await loadKitchenOrders();
 
 
-        if (loader) {
+        if (
+            loader
+        ) {
 
             loader.style.display =
                 "none";
@@ -1461,7 +1676,9 @@ async function init() {
         );
 
 
-        if (loader) {
+        if (
+            loader
+        ) {
 
             loader.style.display =
                 "none";
@@ -1475,3 +1692,243 @@ async function init() {
 // ============================================================
 
 init();
+
+
+// ============================================================
+// SAVE FCM TOKEN
+// ============================================================
+
+async function saveFCMToken(
+    role
+) {
+
+    try {
+
+        if (
+            !window.AndroidFCM ||
+            typeof window
+                .AndroidFCM
+                .getToken !==
+                "function"
+        ) {
+
+            console.log(
+                "Android FCM bridge not available"
+            );
+
+            return;
+        }
+
+
+        // Token ready avvadaniki small wait
+        let token =
+            "";
+
+
+        for (
+            let attempt = 0;
+            attempt < 5;
+            attempt++
+        ) {
+
+            token =
+                String(
+                    window.AndroidFCM
+                        .getToken() ||
+                    ""
+                )
+                    .trim();
+
+
+            if (
+                token
+            ) {
+
+                break;
+            }
+
+
+            await new Promise(
+                resolve =>
+                    setTimeout(
+                        resolve,
+                        1000
+                    )
+            );
+        }
+
+
+        if (
+            !token
+        ) {
+
+            console.log(
+                "FCM token not ready"
+            );
+
+            return;
+        }
+
+
+        const {
+            data,
+            error
+        } =
+            await db.rpc(
+                "save_staff_fcm_token",
+                {
+                    p_session_token:
+                        sessionToken,
+
+                    p_fcm_token:
+                        token,
+
+                    p_role:
+                        role,
+
+                    p_device_name:
+                        navigator.userAgent
+                }
+            );
+
+
+        if (
+            error
+        ) {
+
+            console.error(
+                "FCM token save error:",
+                error
+            );
+
+            return;
+        }
+
+
+        console.log(
+            "FCM token saved:",
+            data
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "FCM setup error:",
+            error
+        );
+    }
+}
+
+
+// ============================================================
+// SEND RESTAURANT PUSH
+// ============================================================
+
+async function sendRestaurantPush({
+
+    sourceRole,
+
+    targetRole,
+
+    title,
+
+    body,
+
+    type,
+
+    orderId = "",
+
+    tableId = "",
+
+    tableName = ""
+
+}) {
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await db.functions.invoke(
+                "send-restaurant-push",
+                {
+
+                    body: {
+
+                        session_token:
+                            sessionToken,
+
+                        source_role:
+                            sourceRole,
+
+                        target_role:
+                            targetRole,
+
+                        title,
+
+                        body,
+
+                        type,
+
+                        order_id:
+                            orderId
+                            ? String(
+                                orderId
+                            )
+                            : "",
+
+                        table_id:
+                            tableId
+                            ? String(
+                                tableId
+                            )
+                            : "",
+
+                        table_name:
+                            tableName
+                            ? String(
+                                tableName
+                            )
+                            : ""
+                    }
+                }
+            );
+
+
+        if (
+            error
+        ) {
+
+            console.error(
+                "FCM push error:",
+                error
+            );
+
+            return false;
+        }
+
+
+        console.log(
+            "FCM push:",
+            data
+        );
+
+
+        return true;
+
+
+    } catch (
+        error
+    ) {
+
+        console.error(
+            "FCM push exception:",
+            error
+        );
+
+
+        return false;
+    }
+}
