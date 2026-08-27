@@ -537,8 +537,6 @@ function checkCashierBillNotifications(
         }
     );
 }
-
-
 // ============================================================
 // LOGIN
 // ============================================================
@@ -938,10 +936,12 @@ function renderBill() {
                 order.discount_amount || 0
             );
 
+
         taxInput.value =
             Number(
                 order.tax_amount || 0
             );
+
 
         serviceInput.value =
             Number(
@@ -1014,8 +1014,6 @@ function renderBill() {
 
     renderBillSummary();
 }
-
-
 // ============================================================
 // BILL SUMMARY
 // ============================================================
@@ -1336,6 +1334,8 @@ async function updateBill() {
             oldText;
     }
 }
+
+
 // ============================================================
 // COMPLETE PAYMENT
 // ============================================================
@@ -1863,9 +1863,7 @@ function buildThermalReceipt(
         receipt +=
             `Discount : -Rs.${discount.toFixed(2)}\n`;
     }
-
-
-    receipt +=
+        receipt +=
         `${line}\n`;
 
 
@@ -2253,7 +2251,6 @@ function printReceipt(
                     justify-content: space-between;
 
                     gap: 10px;
-
                     font-size: 9px;
                     margin: 3px 0;
                 }
@@ -2277,7 +2274,6 @@ function printReceipt(
                         1px solid #000;
 
                     font-size: 9px;
-
                     text-align: left;
                 }
 
@@ -2296,7 +2292,6 @@ function printReceipt(
                     padding-top: 7px;
 
                     font-size: 15px;
-
                     font-weight: bold;
                 }
 
@@ -2308,7 +2303,6 @@ function printReceipt(
                         1px solid #000;
 
                     border-radius: 4px;
-
                     padding: 7px;
                 }
 
@@ -2645,11 +2639,9 @@ function printReceipt(
                             function() {
 
                                 window.print();
-
                             },
                             600
                         );
-
                     };
 
             <\/script>
@@ -2663,6 +2655,8 @@ function printReceipt(
 
     receiptWindow.document.close();
 }
+
+
 // ============================================================
 // CLOSE BILL
 // ============================================================
@@ -2741,6 +2735,7 @@ function startLiveSync() {
             async () => {
 
                 // App/page visible unte matrame refresh
+
                 if (
                     document.visibilityState !==
                     "visible"
@@ -2870,6 +2865,7 @@ document.addEventListener(
                         renderBill();
                     }
 
+
                 } catch (error) {
 
                     console.error(
@@ -2971,6 +2967,15 @@ async function init() {
 
 
         // ====================================================
+        // SAVE CASHIER FCM TOKEN
+        // ====================================================
+
+        await saveFCMToken(
+            "cashier"
+        );
+
+
+        // ====================================================
         // NOTIFICATION PERMISSION
         // ====================================================
 
@@ -3028,3 +3033,129 @@ async function init() {
 // ============================================================
 
 init();
+
+
+// ============================================================
+// SAVE FCM TOKEN
+// ============================================================
+
+async function saveFCMToken(
+    role
+) {
+
+    try {
+
+        if (
+            !window.AndroidFCM ||
+            typeof window.AndroidFCM
+                .getToken !==
+                "function"
+        ) {
+
+            console.log(
+                "Android FCM bridge not available"
+            );
+
+            return;
+        }
+
+
+        // Token ready avvadaniki small wait
+
+        let token =
+            "";
+
+
+        for (
+            let attempt = 0;
+            attempt < 5;
+            attempt++
+        ) {
+
+            token =
+                String(
+                    window.AndroidFCM
+                        .getToken() ||
+                    ""
+                ).trim();
+
+
+            if (
+                token
+            ) {
+
+                break;
+            }
+
+
+            await new Promise(
+                resolve =>
+                    setTimeout(
+                        resolve,
+                        1000
+                    )
+            );
+        }
+
+
+        if (
+            !token
+        ) {
+
+            console.log(
+                "FCM token not ready"
+            );
+
+            return;
+        }
+
+
+        const {
+            data,
+            error
+        } =
+            await db.rpc(
+                "save_staff_fcm_token",
+                {
+                    p_session_token:
+                        sessionToken,
+
+                    p_fcm_token:
+                        token,
+
+                    p_role:
+                        role,
+
+                    p_device_name:
+                        navigator.userAgent
+                }
+            );
+
+
+        if (
+            error
+        ) {
+
+            console.error(
+                "FCM token save error:",
+                error
+            );
+
+            return;
+        }
+
+
+        console.log(
+            "FCM token saved:",
+            data
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "FCM setup error:",
+            error
+        );
+    }
+}
